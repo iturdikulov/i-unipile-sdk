@@ -7,6 +7,8 @@ from types import TracebackType
 from typing import Any, Self
 import httpx
 from httpx import Request, Response
+
+from application.integrations.comm_client.models import APIErrorTypes
 from .api_endpoints import (
     # AttendeesEndpoint,
     # CommonEndpoint,
@@ -27,7 +29,6 @@ from .errors import (
     APIResponseError,
     HTTPResponseError,
     RequestTimeoutError,
-    is_api_error_code,
 )
 from .logging import make_console_logger
 from .typing import SyncAsync
@@ -117,12 +118,11 @@ class BaseClient:
         except httpx.HTTPStatusError as error:
             try:
                 body = error.response.json()
-                code = body.get("code")
+                type = APIErrorTypes[response.status_code]
+                raise APIResponseError(response=response, type=type, body=body)
             except json.JSONDecodeError:
-                code = None
-            if code and is_api_error_code(code):
-                raise APIResponseError(response, body["message"], code)
-            raise HTTPResponseError(error.response)
+                raise HTTPResponseError(error.response)
+
         body = response.json()
         self.logger.debug(f"=> {body}")
         return body

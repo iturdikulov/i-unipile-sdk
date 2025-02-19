@@ -45,11 +45,12 @@ def iterate_paginated_api(
     while True:
         # TODO: add random delays?
         response = function(**kwargs, cursor=next_cursor)
+        next_cursor = response.get("cursor")
+
         items_found += len(response["items"])
         for result in response["items"]:
             yield result
 
-        next_cursor = response.get("cursor")
         if items_found >= max_total or not next_cursor:
             return
 

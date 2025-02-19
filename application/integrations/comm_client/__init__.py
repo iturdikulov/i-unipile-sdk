@@ -4,6 +4,6 @@ For more information visit https://developer.unipile.com/docs/getting-started.
 """
 
 from .client import AsyncClient, Client
-from .errors import APIErrorCode, APIResponseError
+from .errors import APIResponseError
 
-__all__ = ["AsyncClient", "Client", "APIErrorCode", "APIResponseError"]
+__all__ = ["AsyncClient", "Client", "APIResponseError"]

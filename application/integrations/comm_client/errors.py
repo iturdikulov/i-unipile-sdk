@@ -2,7 +2,9 @@
 
 This module defines the exceptions that can be raised when an error occurs.
 """
+from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 import httpx
 
@@ -28,7 +30,6 @@ class HTTPResponseError(Exception):
     classes of success and error.
     """
 
-    code: str = "notionhq_client_response_error"
     status: int
     headers: httpx.Headers
     body: str
@@ -44,62 +45,19 @@ class HTTPResponseError(Exception):
         self.body = response.text
 
 
-class APIErrorCode(str, Enum):
-    Unauthorized = "unauthorized"
-    """The bearer token is not valid."""
-
-    RestrictedResource = "restricted_resource"
-    """Given the bearer token used, the client doesn't have permission to
-    perform this operation."""
-
-    ObjectNotFound = "object_not_found"
-    """Given the bearer token used, the resource does not exist.
-    This error can also indicate that the resource has not been shared with owner
-    of the bearer token."""
-
-    RateLimited = "rate_limited"
-    """This request exceeds the number of requests allowed. Slow down and try again."""
-
-    InvalidJSON = "invalid_json"
-    """The request body could not be decoded as JSON."""
-
-    InvalidRequestURL = "invalid_request_url"
-    """The request URL is not valid."""
-
-    InvalidRequest = "invalid_request"
-    """This request is not supported."""
-
-    ValidationError = "validation_error"
-    """The request body does not match the schema for the expected parameters."""
-
-    ConflictError = "conflict_error"
-    """The transaction could not be completed, potentially due to a data collision.
-    Make sure the parameters are up to date and try again."""
-
-    InternalServerError = "internal_server_error"
-    """An unexpected error occurred. Reach out to Unipile support."""
-
-    ServiceUnavailable = "service_unavailable"
-    """Unipile is unavailable. Try again later.
-    This can occur when the time to respond to a request takes longer than 60 seconds,
-    the maximum request timeout."""
-
-
 class APIResponseError(HTTPResponseError):
-    """An error raised by Unipile API."""
-
-    code: APIErrorCode
+    """
+    An detailed error raised by Unipile API.
+    """
 
     def __init__(
-        self, response: httpx.Response, message: str, code: APIErrorCode
+        self,
+        response: httpx.Response,
+        type: Any,
+        body: dict,
     ) -> None:
-        super().__init__(response, message)
-        self.code = code
-
-
-def is_api_error_code(code: str) -> bool:
-    """Check if given code belongs to the list of valid API error codes."""
-    if isinstance(code, str):
-        return code in (error_code.value for error_code in APIErrorCode)
-    return False
-
+        super().__init__(response, body["detail"])
+        print(body)
+        self.title = body.get("title")
+        self.instance = body.get("instance")
+        self.error = type(body["type"])
