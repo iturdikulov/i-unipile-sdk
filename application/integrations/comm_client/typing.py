@@ -22,3 +22,4 @@ AccountProvider = Literal[
     "MAIL",
     "TWITTER",
 ]
+

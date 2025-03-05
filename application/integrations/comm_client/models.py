@@ -5,13 +5,14 @@ from typing import Any, Literal, Union
 
 from pydantic import BaseModel, Field
 
-
-# Hosted models
-class ConnectAccountResponse(BaseModel):
-    status: Literal["CREATION_SUCCESS", "RECONNECTED"]
-    account_id: str
-    name: str
-
+class AccountType(str, Enum):
+    LINKEDIN = "LINKEDIN"
+    WHATSAPP = "WHATSAPP"
+    SLACK = "SLACK"
+    TWITTER = "TWITTER"
+    MESSENGER = "MESSENGER"
+    INSTAGRAM = "INSTAGRAM"
+    TELEGRAM = "TELEGRAM"
 
 # ---
 
@@ -107,7 +108,6 @@ class LastOutreachActivity(BaseModel):
 
 # Search Result Models
 class PeopleSearchResult(BaseModel):
-    object: Literal["SearchResult"]
     type: Literal["PEOPLE"]
     id: str
     public_identifier: str | None = None
@@ -117,27 +117,27 @@ class PeopleSearchResult(BaseModel):
     profile_picture_url_large: str | None = None
     member_urn: str | None = None
     name: str | None = None
-    first_name: str
-    last_name: str
+    first_name: str | None = None
+    last_name: str | None = None
     network_distance: NetworkDistance
     location: str | None = None
     industry: str | None = None
-    keywords_match: str
+    keywords_match: str | None = None
     headline: str
-    connections_count: int
-    pending_invitation: bool
-    can_send_inmail: bool
-    recruiter_candidate_id: str
-    premium: bool
-    open_profile: bool
-    shared_connections_count: int
-    recent_posts_count: int
-    recently_hired: bool
-    mentioned_in_the_news: bool
+    connections_count: int | None = None
+    pending_invitation: bool | None = None
+    can_send_inmail: bool | None = None
+    recruiter_candidate_id: str | None = None
+    premium: bool | None = None
+    open_profile: bool | None = None
+    shared_connections_count: int | None = None
+    recent_posts_count: int | None = None
+    recently_hired: bool | None = None
+    mentioned_in_the_news: bool | None = None
     last_outreach_activity: LastOutreachActivity | None = None
-    current_positions: list[Position]
-    education: list[Education]
-    work_experience: list[WorkExperience]
+    current_positions: list[Position] | None = None
+    education: list[Education] | None = None
+    work_experience: list[WorkExperience] | None = None
 
 
 class CompanySearchResult(BaseModel):
@@ -187,7 +187,15 @@ class ClassicPeopleSearch(BaseModel):
 
 class SearchResponse(BaseModel):
     object: Literal["LinkedinSearch"]
-    items: list[Union[PeopleSearchResult, CompanySearchResult]]
+    items: list[PeopleSearchResult]
+    config: dict[str, Any]  # This could be more specific based on your needs
+    paging: dict[str, Any]  # This could be more specific based on your needs
+    cursor: str | None = None
+
+
+class SearchCompanyResponse(BaseModel):
+    object: Literal["LinkedinSearch"]
+    items: list[CompanySearchResult]
     config: dict[str, Any]  # This could be more specific based on your needs
     paging: dict[str, Any]  # This could be more specific based on your needs
     cursor: str | None = None
@@ -230,7 +238,7 @@ class LinkedinUserPlanInfo(BaseModel):
 
 
 class LinkedinUserMe(BaseModel):
-    provider: Literal["LINKEDIN"]
+    provider: Provider
     provider_id: str
     entity_urn: str
     object_urn: str
@@ -376,6 +384,197 @@ class LinkedinUserProfile(BaseModel):
     object: Literal["UserProfile"]
 #/ --- User profile
 
+
+# --- specifc
+class LinkedinSpecificUserData(BaseModel):
+    """
+    Provider specific user's additional data for Linkedin.
+    """
+    provider: Literal["LINKEDIN"]
+    member_urn: str
+    occupation: str|None = None
+    network_distance: Literal["SELF", "DISTANCE_1", "DISTANCE_2", "DISTANCE_3", "OUT_OF_NETWORK"] | None = None
+    pending_invitation: bool | None = None
+    location: str | None = None
+    headline: str | None = None
+    contact_info: ContactInfo | None = None
+# /--- specific
+
+# --- User relation
+class UsersRelationsResponse(BaseModel):
+    object: Literal["UserRelationsList"]
+    items: list[UserRelation]
+    cursor: Any
+
+class UserRelation(BaseModel):
+    object: Literal["UserRelation"]
+    first_name: str
+    last_name: str
+    headline: str
+    public_identifier: str
+    public_profile_url: str
+    created_at: float
+    member_id: str
+    member_urn: str
+    connection_urn: str
+    profile_picture_url: str|None = None
+# / -- user relation
+
+# --- Chat
+class ChatAttendeesResponse(BaseModel):
+    object: Literal["ChatAttendeeList"]
+    items: list[ChatAttendee]
+    cursor: str|None
+
+class ChatAttendee(BaseModel):
+    object: Literal["ChatAttendee"]
+    id: str = Field(..., description="A unique identifier.", min_length=1, title="UniqueId")
+    account_id: str = Field(
+        ..., description="A unique identifier.", min_length=1, title="UniqueId"
+    )
+    provider_id: str
+    name: str
+    is_self: Literal[0, 1]
+    hidden: Literal[0, 1] | None = None
+    picture_url: str | None = None
+    profile_url: str | None = None
+    specifics: LinkedinSpecificUserData | None = Field(
+        default=None, description="Provider specific additional data."
+    )
+
+class Chat(BaseModel):
+    object: Literal["Chat"]
+    id: str = Field(
+        ..., description="A unique identifier.", min_length=1, title="UniqueId"
+    )
+    account_id: str = Field(
+        ..., description="A unique identifier.", min_length=1, title="UniqueId"
+    )
+    account_type: AccountType
+    provider_id: str
+    attendee_provider_id: str|None = None
+
+    name: str|None = None
+    type: Literal[0, 1, 2]
+    timestamp: str
+    unread_count: int
+    archived: Literal[0, 1]
+    muted_until: Literal[-1] | str | None = None
+    read_only: Literal[0, 1]
+    disabled_features: list[Literal["reactions", "reply"]] | None = Field(default=None, alias="disabledFeatures")
+    subject: str | None = None
+    organization_id: str | None = Field(default=None, description="Linkedin specific ID for organization mailboxes.")
+    mailbox_id: str | None = Field(default=None, description="Linkedin specific ID for organization mailboxes.")
+    content_type: Literal["inmail", "sponsored", "linkedin_offer"] | None = None
+    folder: list[Literal["INBOX", "INBOX_LINKEDIN_CLASSIC", "INBOX_LINKEDIN_RECRUITER", "INBOX_LINKEDIN_SALES_NAVIGATOR", "INBOX_LINKEDIN_ORGANIZATION"]] | None = None
+
+class ChatsResponse(BaseModel):
+    object: Literal["ChatList"]
+    items: list[Chat]
+    cursor: Any
+
+# ---
+class AttachementSize(BaseModel):
+    width: float
+    height: float
+
+class Attachment(BaseModel):
+    id: str
+    file_size: float|None
+    unavailable: bool
+    mimetype: str | None = None
+    url: str | None = None
+    url_expires_at: float | None = None
+
+class AttachementImg(Attachment):
+    type: Literal["img"]
+    size: AttachementSize
+    sticker: bool
+
+
+class AttachmentVideo(Attachment):
+    type: Literal["video"]
+    size: AttachementSize
+    gif: bool
+
+
+class AttachmentAudio(Attachment):
+    type: Literal["audio"]
+    duration: float|None = None
+    voice_note: bool
+
+
+class AttachmentFile(Attachment):
+    type: Literal["file"]
+    file_name: str
+
+
+class AttachmentPost(Attachment):
+    type: Literal["linkedin_post"]
+
+
+class MessageReaction(BaseModel):
+    value: str
+    sender_id: str
+    is_sender: bool
+
+class MessageQuoted(BaseModel):
+    provider_id: str
+    sender_id: str
+    text: Union[str, Any]
+    attachments: list[
+        Union[AttachementImg, AttachmentVideo, AttachmentAudio, AttachmentFile, AttachmentPost]
+    ]
+
+class Message(BaseModel):
+    object: Literal["Message"]
+    provider_id: str
+    sender_id: str
+    text: str|None = None
+    attachments: list[AttachementImg | AttachmentVideo | AttachmentAudio | AttachmentFile | AttachmentPost]
+    id: str = Field(
+        ..., description="A unique identifier.", min_length=1, title="Unique message id"
+    )
+    account_id: str = Field(
+        ..., description="A unique identifier.", min_length=1, title="Unique account id"
+    )
+    chat_id: str = Field(
+        ..., description="A unique identifier.", min_length=1, title="Unique chat id"
+    )
+    chat_provider_id: str
+    timestamp: str
+
+    is_sender: Literal[0, 1]
+    quoted: MessageQuoted | None = None
+
+    reactions: list[MessageReaction]
+    seen: Literal[0, 1]
+    seen_by: dict[str, Any]
+    hidden: Literal[0, 1]
+    deleted: Literal[0, 1]
+    edited: Literal[0, 1]
+    is_event: Literal[0, 1]
+    delivered: Literal[0, 1]
+    behavior: Literal[0]|Any
+
+    event_type: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]|None = None
+    original: str
+    replies: float | None = None
+    reply_by: list[str] | None = None
+    parent: str | None = Field(default=None, description="A unique parent identifier.", min_length=1)
+    sender_attendee_id: str = Field(description="A unique sender attendee identifier.", min_length=1)
+    subject: str | None = None
+
+class ChatsMessagesResponse(BaseModel):
+    object: Literal["MessageList"]
+    items: list[Message]
+    cursor: Any
+
+class ChatsSendMessageResponse(BaseModel):
+    object: Literal["MessageSent"]
+    message_id: str = Field(..., description="The Unipile ID of the newly sent message.")
+# /--- Chat
+
 class LinkedinUsersInvitePayload(BaseModel):
     provider_id: str = Field(
         ..., description="The id of the user to add. It has to be the provider’s id."
@@ -501,6 +700,14 @@ class LinkedinSearchPayload(BaseModel):
     )
     advanced_keywords: AdvancedKeywords | None = None
 
+class LinkedinURLSearchPayload(BaseModel):
+    api: Literal["classic"] = "classic"
+    category: Literal["people"] = "people"
+    url: str = Field(
+        description="The URL to search for.",
+        min_length=32,
+        pattern=r"^https:\/\/www\.linkedin\.com\/(search\/results\/people\/|sales\/search\/people|recruiter\/search)",
+    )
 
 class CommonSearchParameter(str, Enum):
     LOCATION = "LOCATION"
@@ -655,3 +862,53 @@ APIErrorTypes = {
     503: ServiceUnavailableErrorType,
     408: RequestTimeoutErrorType,
 }
+
+# ---
+# Webhooks
+
+# Hosted models
+class ConnectAccountResponse(BaseModel):
+    status: Literal["CREATION_SUCCESS", "RECONNECTED"]
+    account_id: str
+    name: str
+
+
+class WebhookAttendee(BaseModel):
+    attendee_id: str
+    attendee_name: str
+    attendee_provider_id: str
+    attendee_profile_url: str
+
+
+class WebhookAttachment(BaseModel):
+    id: str
+    size: AttachementSize
+    sticker: str
+    unavailable: str
+    mimetype: str
+    type: str
+    url: str
+
+
+class AccountInfo(BaseModel):
+    # WARN: unify this field
+    type: AccountType
+    feature: Literal["classic"]
+    user_id: str
+
+
+class MessageEventResponse(BaseModel):
+    account_id: str
+    account_type: AccountType
+    account_info: AccountInfo
+    event: Literal["message_received", "message_reaction", "message_read"]
+    chat_id: str
+    timestamp: str
+    webhook_name: str
+    message_id: str
+    message: str|None = None
+    sender: WebhookAttendee
+    attendees: list[WebhookAttendee]
+    attachments: WebhookAttachment|None = None
+    reaction: str|None = None
+    reaction_sender: WebhookAttendee|None = None
