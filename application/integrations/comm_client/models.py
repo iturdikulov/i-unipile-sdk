@@ -238,7 +238,7 @@ class LinkedinUserPlanInfo(BaseModel):
 
 
 class LinkedinUserMe(BaseModel):
-    provider: Provider
+    provider: Literal["LINKEDIN"]
     provider_id: str
     entity_urn: str
     object_urn: str
