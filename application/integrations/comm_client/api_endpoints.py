@@ -187,11 +187,11 @@ class SearchEndpoint(Endpoint):
 
     def search(
         self,
-        account_id: str,
-        payload: LinkedinSearchPayload,
+        account_id: Annotated[str, StringConstraints(min_length=1)],
+        payload: LinkedinSearchPayload|LinkedinURLSearchPayload,
         cursor: str | None = None,
         limit: int = 10,
-    ) -> SyncAsync[Any]:
+    ) -> SearchResponse:
         """
         Search people and companies from the Linkedin Classic as well as Sales Navigator APIs.
         Check out our Guide with examples to master LinkedIn search :
@@ -199,12 +199,13 @@ class SearchEndpoint(Endpoint):
 
         Endpoint documentation: https://developer.unipile.com/reference/linkedincontroller_search
         """
-        return self.parent.request(
+        response = self.parent.request(
             path="linkedin/search",
             method="POST",
             query={"cursor": cursor, "account_id": account_id, "limit": limit},
             body=payload.model_dump(exclude_none=True),
         )
+        return SearchResponse(**response)
 
     def search_param(self, account_id: str, type: CommonSearchParameter, keywords: str) -> LinkedinSearchParametersResponse:
         """

@@ -45,14 +45,17 @@ def iterate_paginated_api(
     while True:
         # TODO: add random delays?
         response = function(**kwargs, cursor=next_cursor)
-        next_cursor = response.get("cursor")
 
-        items_found += len(response["items"])
-        for result in response["items"]:
+        # WARN: use pydantic mode here, when we convert search resuts to
+        # pydantic model cusor/items
+        next_cursor = response.cursor
+
+        items_found += len(response.items)
+        for result in response.items:
             yield result
 
         if items_found >= max_total or not next_cursor:
-            return
+            break
 
 
 def collect_paginated_api(function: Callable[..., Any], **kwargs: Any) -> List[Any]:
