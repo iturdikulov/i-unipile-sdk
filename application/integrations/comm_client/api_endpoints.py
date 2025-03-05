@@ -2,20 +2,31 @@
 Unipile API endpoints.
 """
 
+# WARN: use ranged limits type
+
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Annotated
+from pydantic import StringConstraints
+
 from application.integrations.comm_client.models import (
+    ChatAttendeesResponse,
+    ChatsMessagesResponse,
+    ChatsResponse,
+    ChatsSendMessageResponse,
     CommonSearchParameter,
     LinkedinSearchParametersResponse,
     LinkedinSearchPayload,
+    LinkedinURLSearchPayload,
     LinkedinUserMe,
     LinkedinUserProfile,
     LinkedinUsersInvitePayload,
     LinkedinUsersInviteResponse,
+    SearchResponse,
+    UsersRelationsResponse,
 )
 
-from .helpers import pick
 from .typing import AccountLinkType, AccountProvider, SyncAsync
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -30,7 +41,10 @@ class UsersEndpoint(Endpoint):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
-    def me(self, account_id: str) -> LinkedinUserMe:
+    def me(
+        self,
+        account_id: Annotated[str, StringConstraints(min_length=1)],
+    ) -> LinkedinUserMe:
         """
         Retrieve informations about account owner.
 
@@ -44,7 +58,11 @@ class UsersEndpoint(Endpoint):
             )
         )
 
-    def retrieve(self, identifier: str, account_id: str) -> LinkedinUserProfile:
+    def retrieve(
+        self,
+        account_id: Annotated[str, StringConstraints(min_length=1)],
+        identifier: Annotated[str, StringConstraints(min_length=1)],
+    ) -> LinkedinUserProfile:
         """
         Retrieve the profile of a user. Ensure careful implementation of this action and consult
         provider limits and restrictions:
@@ -80,44 +98,135 @@ class UsersEndpoint(Endpoint):
             )
         )
 
+    def relations(
+        self,
+        account_id: Annotated[str, StringConstraints(min_length=1)],
+        filter: str | None = None,
+        cursor: str | None = None,
+        limit: int = 100,
+    ) -> UsersRelationsResponse:
+        """
+        Returns a list of all the relations of an account. Ensure careful implementation of this
+        action and consult provider limits and restrictions:
+        https://developer.unipile.com/docs/provider-limits-and-restrictions
+
+        Endpoint documentation: https://developer.unipile.com/reference/userscontroller_getrelations
+        """
+        return UsersRelationsResponse(
+            **self.parent.request(
+                path="users/relations",
+                method="GET",
+                query={
+                    "account_id": account_id,
+                    "filter": filter,
+                    "cursor": cursor,
+                    "limit": limit,
+                },
+            )
+        )
+
+
 class MessagesEndpoint(Endpoint):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
-    def attendee_messages(self):
+    def chat_attendees(
+        self,
+        account_id: Annotated[str, StringConstraints(min_length=1)],
+        cursor: str | None = None,
+        limit: int = 100,
+    ):
         """
-        """
-        # https://developer.unipile.com/reference/chatattendeescontroller_listmessagesbyattendee
-        pass
+        Returns a list of messaging attendees. Some optional parameters are available to filter the
+        results.
 
-    def send_message(self):
+        Endpoint documentation: https://developer.unipile.com/reference/chatattendeescontroller_listallattendees
         """
+        return ChatAttendeesResponse(
+            **self.parent.request(
+                path="chat_attendees",
+                method="GET",
+                query={
+                    "account_id": account_id,
+                    "cursor": cursor,
+                    "limit": limit,
+                },
+            )
+        )
+
+    # WARN: add befor/after support
+    def list_chats_by_attendee(
+        self,
+        attendee_id: str,
+        account_id: Annotated[str, StringConstraints(min_length=1)],
+        cursor: str|None = None,
+        limit: int = 100
+    ):
         """
-        # https://developer.unipile.com/reference/chatscontroller_sendmessageinchat
-        pass
+        Returns a list of chats where a given attendee is involved.
 
-# def test_get_chat_details():
-#     for chat in chats["items"]:
-#         chat_id = chat["id"]
-#         chat_details = requests.get(f"https://{UNIPILE_DSN}/api/v1/chats/{chat_id}",
-#                                     headers=headers).json()
-#         pprint(chat_details)
-#         messages = requests.get(f"https://{UNIPILE_DSN}/api/v1/chats/{chat_id}/messages",
-#                             headers=headers,
-#                             ).json()
-#         pprint(messages)
-#         break
+        Endpoint documentation: https://developer.unipile.com/reference/chatattendeescontroller_listchatsbyattendee
+        """
+        return ChatsResponse(
+            **self.parent.request(
+                path=f"chat_attendees/{attendee_id}/chats",
+                method="GET",
+                query={
+                    "account_id": account_id,
+                    "cursor": cursor,
+                    "limit": limit,
+                },
+            )
+        )
 
-# def send_message():
-#     for item in chats["items"]:
-#         # Send message
-#         response = requests.post(f"https://{UNIPILE_DSN}/api/v1/chats/{item['id']}/messages",
-#         headers={
-#             "accept": "application/json",
-#             "X-API-KEY": UNIPILE_ACCESS_TOKEN,
-#         }, data={"text" : "Thank you for connection."})
-#         print(response.text)
-#         break
+    # WARN: add before/after support
+    def messages(
+        self,
+        chat_id: Annotated[str, StringConstraints(min_length=1)],
+        sender_id: Annotated[str, StringConstraints(min_length=1)]|None = None,
+        cursor: str|None = None,
+        limit: int = 100
+    ):
+        """
+        Returns a list of chats where a given attendee is involved.
+
+        Endpoint documentation: https://developer.unipile.com/reference/chatattendeescontroller_listchatsbyattendee
+        """
+        response = self.parent.request(
+                path=f"chats/{chat_id}/messages",
+                method="GET",
+                query={
+                    "sender_id": sender_id,
+                    "cursor": cursor,
+                    "limit": limit,
+                },
+            )
+        return ChatsMessagesResponse(**response)
+
+    def send_message(
+        self,
+        chat_id: Annotated[str, StringConstraints(min_length=1)],
+        account_id: Annotated[str, StringConstraints(min_length=1)],
+        text: str|None = None,
+    ) -> ChatsSendMessageResponse:
+        """
+        Send a message to the given chat with the possibility to link some attachments.
+
+        NOTE: unipile support thread_id (slack messaging), voice_message and video_message, but we
+        don't use it, so required parameters are not implemented.
+
+        Endpoint documentation: https://developer.unipile.com/reference/chatscontroller_sendmessageinchat
+        """
+
+        return ChatsSendMessageResponse(**self.parent.request(
+            path=f"chats/{chat_id}/messages",
+            method="POST",
+            body={
+                "account_id": account_id,
+                "text": text,
+            }
+        ))
+
 
 class AccountsEndpoint(Endpoint):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -134,7 +243,10 @@ class AccountsEndpoint(Endpoint):
             method="GET",
         )
 
-    def delete(self, account_id: str):
+    def delete(
+        self,
+        account_id: Annotated[str, StringConstraints(min_length=1)],
+    ):
         return self.parent.request(
             path=f"accounts/{account_id}",
             method="DELETE",
@@ -207,7 +319,12 @@ class SearchEndpoint(Endpoint):
         )
         return SearchResponse(**response)
 
-    def search_param(self, account_id: str, type: CommonSearchParameter, keywords: str) -> LinkedinSearchParametersResponse:
+    def search_param(
+        self,
+        account_id: Annotated[str, StringConstraints(min_length=1)],
+        type: CommonSearchParameter,
+        keywords: str,
+    ) -> LinkedinSearchParametersResponse:
         """
         LinkedIn doesn't accept raw text as search parameters, but IDs. This route will help you
         get the right IDs for your inputs. Check out our Guide with examples to master LinkedIn

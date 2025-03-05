@@ -1,25 +1,22 @@
-"""Synchronous and asynchronous clients for unipile's API."""
+"""
+Synchronous and asynchronous clients for unipile's API.
+"""
 import json
 import logging
 from abc import abstractmethod
 from dataclasses import dataclass
+from os import environ
 from types import TracebackType
 from typing import Any, Self
 import httpx
+from http import HTTPStatus
 from httpx import Request, Response
+from pydantic import BaseModel
 
-from application.integrations.comm_client.models import APIErrorTypes
+from application.integrations.comm_client.models import APIErrorTypes, NotFoundType
+from application.integrations.linkedin.exceptions import LinkedinLoginError
 from .api_endpoints import (
-    # AttendeesEndpoint,
-    # CommonEndpoint,
-    # LinkedinSpecificEndpoint,
-    # MailsEndpoint,
-    # MessagingEndpoint,
-    # PostsEndpoint,
-    # UsersEndpoint,
-    # CommentsEndpoint,
-    # DatabasesEndpoint,
-    # PagesEndpoint,
+    MessagesEndpoint,
     AccountsEndpoint,
     HostedEndpoint,
     UsersEndpoint,
@@ -35,7 +32,8 @@ from .typing import SyncAsync
 
 @dataclass
 class ClientOptions:
-    """Options to configure the client.
+    """
+    Options to configure the client.
     Attributes:
         auth: Bearer token for authentication. If left undefined, the `auth` parameter
             should be set on each request.
@@ -48,8 +46,8 @@ class ClientOptions:
         logger: A custom logger.
         unipile_version: unipile version to use.
     """
-    auth: str | None = None
-    base_url: str = "https://api2.unipile.com:13260"
+    auth: str = environ["UNIPILE_ACCESS_TOKEN"]
+    base_url: str = f"https://{environ['UNIPILE_BASE_URL']}"
     timeout_ms: int = 60_000
     log_level: int = logging.WARNING
     logger: logging.Logger | None = None
@@ -75,11 +73,7 @@ class BaseClient:
         self.users = UsersEndpoint(self)
         self.hosted = HostedEndpoint(self)
         self.ln_search = SearchEndpoint(self)
-        # self.databases = DatabasesEndpoint(self)
-        # self.users = UsersEndpoint(self)
-        # self.pages = PagesEndpoint(self)
-        # self.search = SearchEndpoint(self)
-        # self.comments = CommentsEndpoint(self)
+        self.messages = MessagesEndpoint(self)
 
     @property
     def client(self) -> httpx.Client | httpx.AsyncClient:
@@ -140,7 +134,10 @@ class BaseClient:
         pass
 
 class Client(BaseClient):
-    """Synchronous client for unipile's API."""
+    """
+    Synchronous client for unipile's API.
+    """
+
     client: httpx.Client
 
     def __init__(
@@ -168,7 +165,10 @@ class Client(BaseClient):
         del self._clients[-1]
 
     def close(self) -> None:
-        """Close the connection pool of the current inner client."""
+        """
+        Close the connection pool of the current inner client.
+        """
+
         self.client.close()
 
     def request(
@@ -178,16 +178,45 @@ class Client(BaseClient):
         query: dict[Any, Any] | None = None,
         body: dict[Any, Any] | None = None,
     ) -> dict:
-        """Send an HTTP request."""
+        """
+        Send an HTTP request.
+        """
+
+        # Filter None values from the query dictionary,
+        # since Unipile API does not support None
+        # values for specific endpoints
+        if query:
+            query = {k: v for k, v in query.items() if v is not None}
+
         request = self._build_request(method, path, query, body)
+
         try:
             response = self.client.send(request)
         except httpx.TimeoutException:
             raise RequestTimeoutError()
+
+        # Verify we don't get 404 error here, otherwise raise account login error, sometimes (when
+        # we switch master unipile account) cursor in query can invoke 404 error and this isn't
+        # linkedin account connection error, so we need to avoid raising LinkedinLoginError in this
+        # case.
+        # TODO: maybe need to explictly check account connection during this situation?
+        # send raw request to check account connection
+        if response.is_error and query and query.get("account_id") and not query.get("cursor"):
+            response_type = APIErrorTypes[response.status_code]
+            response_body = response.json()
+
+            if response_type == NotFoundType and \
+                response_body.get("type") == NotFoundType.ERRORS_RESOURCE_NOT_FOUND:
+
+                raise LinkedinLoginError()
+
         return self._parse_response(response)
 
 class AsyncClient(BaseClient):
-    """Asynchronous client for unipile's API."""
+    """
+    Asynchronous client for unipile's API.
+    """
+
     client: httpx.AsyncClient
 
     def __init__(
@@ -215,7 +244,10 @@ class AsyncClient(BaseClient):
         del self._clients[-1]
 
     async def aclose(self) -> None:
-        """Close the connection pool of the current inner client."""
+        """
+        Close the connection pool of the current inner client.
+        """
+
         await self.client.aclose()
 
     async def request(
@@ -226,7 +258,10 @@ class AsyncClient(BaseClient):
         body: dict[Any, Any] | None = None,
         auth: str | None = None,
     ) -> Any:
-        """Send an HTTP request asynchronously."""
+        """
+        Send an HTTP request asynchronously.
+        """
+
         request = self._build_request(method, path, query, body, auth)
         try:
             response = await self.client.send(request)
