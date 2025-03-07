@@ -62,8 +62,8 @@ class DateRange(BaseModel):
 
 
 class TenureInfo(BaseModel):
-    years: int
-    months: int
+    years: int|None = None
+    months: int|None = None
 
 
 class Position(BaseModel):
@@ -897,18 +897,196 @@ class AccountInfo(BaseModel):
     user_id: str
 
 
-class MessageEventResponse(BaseModel):
-    account_id: str
-    account_type: AccountType
-    account_info: AccountInfo
-    event: Literal["message_received", "message_reaction", "message_read"]
-    chat_id: str
-    timestamp: str
-    webhook_name: str
-    message_id: str
-    message: str|None = None
-    sender: WebhookAttendee
-    attendees: list[WebhookAttendee]
-    attachments: WebhookAttachment|None = None
-    reaction: str|None = None
-    reaction_sender: WebhookAttendee|None = None
+# class MessageEventResponse(BaseModel):
+#     account_id: str
+#     account_type: AccountType
+#     account_info: AccountInfo
+#     event: Literal["message_received", "message_reaction", "message_read"]
+#     chat_id: str
+#     timestamp: str
+#     webhook_name: str
+#     message_id: str
+#     message: str|None = None
+#     sender: WebhookAttendee
+#     attendees: list[WebhookAttendee]
+#     attachments: WebhookAttachment|None = None
+#     reaction: str|None = None
+#     reaction_sender: WebhookAttendee|None = None
+
+# class WebhookFormat(str, Enum):
+#     """
+#     The format of data you recieve from the webhook. Accepted values: json | form
+#     """
+#
+#     JSON = "json"
+#     FORM = "form"
+#
+# class WebhookHeader(BaseModel):
+#     key: str
+#     value: str
+#
+# class WebookEvent(str, Enum):
+#     MAIL_OPENED = "mail_opened"
+#     MAIL_LINK_CLICKED = "mail_link_clicked"
+#
+# class AccountId(BaseModel):
+#     id: str = Field(
+#         ..., description="A unique identifier.", min_length=1, title="UniqueId"
+#     )
+#     name: str|None = None
+#     type: (
+#         Literal["GOOGLE"]
+#         | Literal["GOOGLE_CALENDAR"]
+#         | Literal["ICLOUD"]
+#         | Literal["LINKEDIN"]
+#         | Literal["MAIL"]
+#         | Literal["MOBILE"]
+#         | Literal["OUTLOOK"]
+#         | Literal["TWITTER"]
+#         | Literal["WHATSAPP"]
+#         | Literal["SLACK"]
+#         | Literal["TELEGRAM"]
+#     )
+#
+#
+# class MessagingTriggerKey(str, Enum):
+#     ACCOUNT_ID = "account_id"
+#     ACCOUNT_TYPE = "account_type"
+#     ACCOUNT_INFO = "account_info"
+#     CHAT_ID = "chat_id"
+#     TIMESTAMP = "timestamp"
+#     WEBHOOK_NAME = "webhook_name"
+#     MESSAGE_ID = "message_id"
+#     MESSAGE = "message"
+#     REACTION = "reaction"
+#     REACTION_SENDER = "reaction_sender"
+#     SENDER = "sender"
+#     ATTENDEES = "attendees"
+#     ATTACHMENTS = "attachments"
+#     SUBJECT = "subject"
+#     PROVIDER_CHAT_ID = "provider_chat_id"
+#     PROVIDER_MESSAGE_ID = "provider_message_id"
+#
+#
+# class MessagingTriggerSchema(BaseModel):
+#     """
+#     You can use this field to change the name of the properties you will receive from the webhook.
+#     """
+#     name: str = Field(
+#         ...,
+#         description="The name of the property you want to receive. It will replace the original name of the property.",
+#     )
+#     key: MessagingTriggerKey
+#
+#
+# class EmailTriggerKey(str, Enum):
+#     EMAIL_ID = "email_id"
+#     ACCOUNT_ID = "account_id"
+#     WEBHOOK_NAME = "webhook_name"
+#     DATE = "date"
+#     FROM_ATTENDEE = "from_attendee"
+#     TO_ATTENDEES = "to_attendees"
+#     CC_ATTENDEES = "cc_attendees"
+#     BCC_ATTENDEES = "bcc_attendees"
+#     REPLY_TO_ATTENDEES = "reply_to_attendees"
+#     SUBJECT = "subject"
+#     BODY = "body"
+#     BODY_PLAIN = "body_plain"
+#     MESSAGE_ID = "message_id"
+#     PROVIDER_ID = "provider_id"
+#     TRACKING_ID = "tracking_id"
+#     READ_DATE = "read_date"
+#     IS_COMPLETE = "is_complete"
+#     IN_REPLY_TO = "in_reply_to"
+#     HAS_ATTACHMENTS = "has_attachments"
+#     ATTACHMENTS = "attachments"
+#     FOLDERS = "folders"
+#     ROLE = "role"
+#     ORIGIN = "origin"
+#
+#
+# class EmailTriggerSchema(BaseModel):
+#     """
+#     You can use this field to change the name of the properties you will receive from the webhook.
+#     """
+#
+#     name: str = Field(
+#         ...,
+#         description="The name of the property you want to receive. It will replace the original name of the property.",
+#     )
+#     key: EmailTriggerKey
+#
+#
+# class Key2(str, Enum):
+#     EVENT_ID = "event_id"
+#     TRACKING_ID = "tracking_id"
+#     TYPE = "type"
+#     DATE = "date"
+#     EMAIL_ID = "email_id"
+#     ACCOUNT_ID = "account_id"
+#     IP = "ip"
+#     USER_AGENT = "user_agent"
+#     URL = "url"
+#     LABEL = "label"
+#     CUSTOM_DOMAIN = "custom_domain"
+#
+#
+# class Datum2(BaseModel):
+#     """
+#     You can use this field to change the name of the properties you will receive from the webhook.
+#     """
+#
+#     name: str = Field(
+#         ...,
+#         description="The name of the property you want to receive. It will replace the original name of the property.",
+#     )
+#     key: Key2
+#
+# class WebhookBaseSchema(BaseModel):
+#     id: str = Field(
+#         ..., description="A unique identifier.", min_length=1, title="UniqueId"
+#     )
+#     account_ids: list[AccountId]|None = Field(
+#         default=None,
+#         description="An optional list of account ids to be targeted by the webhook. If not set, the webhook will apply to all current and future accounts connected to Unipile.",
+#     )
+#
+#     enabled: bool|None = Field(
+#         default=None, description="A boolean to activate or disable the webhook."
+#     )
+#
+#     name: str|None= Field(
+#         default=None,
+#         description="This field will be sent back to you in the notify_url to help match the added account with your user.",
+#     )
+#
+#     request_url: str = Field(..., description="The url to associate with the webhook.")
+#
+#
+#     format: WebhookFormat|None = Field(
+#         default=None,
+#         description="The format of data you recieve from the webhook. Accepted values: json | form",
+#         examples=["json"],
+#     )
+#
+#     headers: list[WebhookHeader]|None = Field(
+#         default=None,
+#         description="An optional field to add some headers to the webhook.",
+#     )
+#
+#
+#     data: Union[list[MessagingTriggerSchema], list[EmailTriggerSchema], list[Datum2]]
+#
+#     events: Optional[list[Union[Events, Events1, Events2, Events3]]] = None
+#     type: Literal["AUTO"]
+#
+#     # source: Literal["email_tracking"] = Field(
+#     #     ...,
+#     #     description="A litteral to pick the kind of data you expect to receive from the webhook.",
+#     # )
+#     # events: Optional[list[Event3]] = Field(
+#     #     default=None,
+#     #     description='An array of events on which the webhook should be triggered. Default value include "mail_opened".',
+#     # )
+#     # data: Optional[list[Datum8]] = None
+#     #
