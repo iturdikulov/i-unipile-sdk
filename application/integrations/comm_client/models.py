@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from enum import Enum
+from enum import Enum, IntEnum
 from typing import Any, Literal, Union
 
 from pydantic import BaseModel, Field
@@ -104,6 +104,60 @@ class Author(BaseModel):
 class LastOutreachActivity(BaseModel):
     type: Literal["SEND_MESSAGE", "ACCEPT_INVITATION"]
     performed_at: str
+
+class LinkedinCompanyMessaging(BaseModel):
+    is_enabled: bool
+    id: str|None = None
+    entity_urn:  str|None = None
+
+class LinkedinCompanyLocation(BaseModel):
+    is_headquarter: bool
+    country: str
+    city: str
+    postal_code: str|None = Field(default=None, alias="postalCode")
+    street: list[str]
+    description: str|None = None
+    area: str|None = None
+
+class LinkedinCompanyProfile(BaseModel):
+    object: Literal["CompanyProfile"]
+    id: str
+    name: str
+    description: str | None = None
+    entity_urn: str
+    public_identifier: str
+    profile_url: str
+    tagline: str|None = None
+    followers_count: float|None = None
+    is_followable: bool|None = None
+    is_employee: bool|None = None
+    messaging: LinkedinCompanyMessaging
+    claimed: bool
+    viewer_permissions: Any  # TODO: use real model here
+    organization_type: (
+        Literal["PUBLIC_COMPANY"]
+        | Literal["EDUCATIONAL"]
+        | Literal["SELF_EMPLOYED"]
+        | Literal["GOVERNMENT_AGENCY"]
+        | Literal["NON_PROFIT"]
+        | Literal["SELF_OWNED"]
+        | Literal["PRIVATELY_HELD"]
+        | Literal["PARTNERSHIP"]
+        | Any
+    )
+    locations: list[LinkedinCompanyLocation]
+    logo: str|None = None
+    localized_description: list[dict[str, Any]]|None = None
+    localized_name: list[dict[str, Any]]|None = None
+    localized_tagline: list[dict[str, Any]]|None = None
+    industry: list[str]|None = None
+    activities: list[str]|None = None
+    employee_count: float|None = None
+    employee_count_range: Any|None = None
+    website: str|None = None
+    foundation_date: str|None = None
+    phone: str|None = None
+    insights: Any|None = None # TODO: use real model here
 
 
 # Search Result Models
@@ -603,7 +657,7 @@ class LinkedinUsersInviteResponse(BaseModel):
     )
 
 # Search
-class NetworkDistanceEnum(float, Enum):
+class NetworkDistanceEnum(IntEnum):
     FIRST = 1
     SECOND = 2
     THIRD = 3
@@ -625,7 +679,7 @@ class AdvancedKeywords(BaseModel):
         default=None, description="Linkedin native filter : KEYWORDS / TITLE."
     )
     company: str | None = Field(
-        default=None, description="Linkedin native filter : KEYWORDS / LAST NAME."
+        default=None, description="Linkedin native filter : KEYWORDS / COMPANY."
     )
     school: str | None = Field(
         default=None, description="Linkedin native filter : KEYWORDS / LAST NAME."
@@ -700,10 +754,255 @@ class LinkedinSearchPayload(BaseModel):
     )
     advanced_keywords: AdvancedKeywords | None = None
 
+
+# SALES NAV PAYLOAD START
+# WARN: patterns doesn't work, some fields are not added
+class SalesNavPayloadLocation(BaseModel):
+    """
+    Linkedin native filter : GEOGRAPHY.
+    """
+    include: list[str]|None = Field(
+        default=None,
+        description="The ID of the parameter. Use type LOCATION on the List search parameters route to find out the right ID.",
+        min_length=1,
+        # pattern="^\\d+$",
+    )
+    exclude: list[str]|None = Field(
+        default=None,
+        description="The ID of the parameter. Use type LOCATION on the List search parameters route to find out the right ID.",
+        min_length=1,
+        # pattern="^\\d+$",
+    )
+
+
+class SalesNavPayloadIndustry(BaseModel):
+    """
+    Linkedin native filter : INDUSTRY.
+    """
+    include: list[str]|None = Field(
+        default=None,
+        description="The ID of the parameter. Use type INDUSTRY on the List search parameters route to find out the right ID.",
+        min_length=1,
+        # pattern="^\\d+$",
+    )
+    exclude: list[str]|None = Field(
+        default=None,
+        description="The ID of the parameter. Use type INDUSTRY on the List search parameters route to find out the right ID.",
+        min_length=1,
+        # pattern="^\\d+$",
+    )
+
+class SalesNavPayloadSchool(BaseModel):
+    """
+    Linkedin native filter : SCHOOL.
+    """
+    include: list[str]|None = Field(
+        default=None,
+        description="The ID of the parameter. Use type SCHOOL on the List search parameters route to find out the right ID.",
+        min_length=1,
+        # pattern="^\\d+$",
+    )
+    exclude: list[str]|None = Field(
+        default=None,
+        description="The ID of the parameter. Use type SCHOOL on the List search parameters route to find out the right ID.",
+        min_length=1,
+        # pattern="^\\d+$",
+    )
+
+class SalesNavPayloadCompany(BaseModel):
+    """
+    Linkedin native filter : CURRENT COMPANY.
+    """
+
+    include: list[str]|None = Field(
+        default=None,
+        description="The ID of the parameter. Use type COMPANY on the List search parameters route to find out the right ID.",
+        min_length=1,
+        # pattern="^\\d+$",
+    )
+    exclude: list[str]|None = Field(
+        default=None,
+        description="The ID of the parameter. Use type COMPANY on the List search parameters route to find out the right ID.",
+        min_length=1,
+        # pattern="^\\d+$",
+    )
+
+class SalesNavPayloadRole(BaseModel):
+    """
+    Linkedin native filter : CURRENT JOB TITLE.
+    """
+    include: list[str]|None = Field(
+        default=None,
+        description="The ID of the parameter. Use type JOB_TITLE on the List search parameters route to find out the right ID.",
+        min_length=1,
+        # pattern="^\\d+$",
+    )
+    exclude: list[str]|None = Field(
+        default=None,
+        description="The ID of the parameter. Use type JOB_TITLE on the List search parameters route to find out the right ID.",
+        min_length=1,
+        # pattern="^\\d+$",
+    )
+
+class TenureMin(float, Enum):
+    NUMBER_0 = 0
+    NUMBER_1 = 1
+    NUMBER_3 = 3
+    NUMBER_6 = 6
+    NUMBER_10 = 10
+
+class TenureMax(float, Enum):
+    NUMBER_1 = 1
+    NUMBER_2 = 2
+    NUMBER_5 = 5
+    NUMBER_10 = 10
+
+class TenureItem(BaseModel):
+    min: TenureMin|None = None
+    max: TenureMax|None = None
+
+class LinkedinSalesNavSearchPayload(BaseModel):
+    api: Literal["sales_navigator"] = "sales_navigator"
+    category: Literal["people"] = "people"
+    keywords: str|None = Field(
+        default=None, description="Linkedin native filter : KEYWORDS."
+    )
+    saved_search_id: str|None = Field(
+        default=None,
+        description="The ID of the parameter. Use type SAVED_SEARCHES on the List search parameters route to find out the right ID.\nOverrides all other parameters.",
+        # pattern="^\\d+$",
+    )
+    recent_search_id: str|None = Field(
+        default=None,
+        description="The ID of the parameter. Use type RECENT_SEARCHES on the List search parameters route to find out the right ID.\nOverrides all other parameters.",
+        # pattern="^\\d+$",
+    )
+    location: SalesNavPayloadLocation|None = Field(
+        default=None, description="Linkedin native filter : GEOGRAPHY."
+    )
+    industry:  SalesNavPayloadIndustry|None = Field(
+        default=None, description="Linkedin native filter : INDUSTRY."
+    )
+    first_name: str|None = Field(
+        default=None, description="Linkedin native filter : FIRST NAME."
+    )
+    last_name: str|None = Field(
+        default=None, description="Linkedin native filter : LAST NAME."
+    )
+    tenure: list[TenureItem]|None = Field(
+        default=None, description="Linkedin native filter : YEARS OF EXPERIENCE."
+    )
+    groups: list[str]|None = Field(
+        default=None,
+        description="The ID of the parameter. Use type GROUPS on the List search parameters route to find out the right ID.\nLinkedin native filter : GROUPS.",
+        min_length=1,
+        # pattern="^\\d+$",
+    )
+    school: SalesNavPayloadSchool|None = Field(
+        default=None, description="Linkedin native filter : SCHOOL."
+    )
+    profile_language: list[str]|None = Field(
+        default=None,
+        description="ISO 639-1 language code.\nLinkedin native filter : PROFILE LANGUAGE.",
+        max_length=2,
+        min_length=2,
+    )
+    company: SalesNavPayloadCompany|None = Field(
+        default=None, description="Linkedin native filter : CURRENT COMPANY."
+    )
+    # company_headcount: Optional[list[CompanyHeadcountItem]] = Field(
+    #     default=None, description="Linkedin native filter : COMPANY HEADCOUNT."
+    # )
+    # company_type: Optional[list[CompanyTypeEnum]] = Field(
+    #     default=None, description="Linkedin native filter : COMPANY TYPE."
+    # )
+    # company_location: Optional[CompanyLocation] = Field(
+    #     default=None,
+    #     description="Linkedin native filter : COMPANY HEADQUARTERS LOCATION.",
+    # )
+    # tenure_at_company: Optional[list[TenureAtCompanyItem]] = Field(
+    #     default=None, description="Linkedin native filter : YEARS IN CURRENT COMPANY."
+    # )
+    # past_company: Optional[PastCompany] = Field(
+    #     default=None, description="Linkedin native filter : PAST COMPANY."
+    # )
+    # function: Optional[Function] = Field(
+    #     default=None, description="Linkedin native filter : FUNCTION."
+    # )
+    role: SalesNavPayloadRole|None = Field(
+        default=None, description="Linkedin native filter : CURRENT JOB TITLE."
+    )
+    # tenure_at_role: Optional[list[TenureAtRoleItem]] = Field(
+    #     default=None, description="Linkedin native filter : YEARS IN CURRENT POSITION."
+    # )
+    # seniority: Optional[Seniority3] = Field(
+    #     default=None, description="Linkedin native filter : SENIORITY LEVEL."
+    # )
+    # past_role: Optional[PastRole] = Field(
+    #     default=None, description="Linkedin native filter : PAST JOB TITLE."
+    # )
+    # following_your_company: Optional[bool] = Field(
+    #     default=None, description="Linkedin native filter : FOLLOWING YOUR COMPANY."
+    # )
+    # viewed_your_profile_recently: bool|None = Field(
+    #     default=None,
+    #     description="Linkedin native filter : VIEWED YOUR PROFILE RECENTLY.",
+    # )
     network_distance: list[NetworkDistanceEnum|Literal["GROUP"]]|None = Field(
         default=None,
         description="First, second, third+ degree or GROUP.\nLinkedin native filter : CONNECTION.",
     )
+    # connections_of: Optional[list[str]] = Field(
+    #     default=None,
+    #     description="The ID of the parameter. Use type PEOPLE on the List search parameters route to find out the right ID.\nLinkedin native filter : CONNECTIONS OF.",
+    #     min_length=1,
+    #     pattern="^.+$",
+    # )
+    # past_colleague: Optional[bool] = Field(
+    #     default=None, description="Linkedin native filter : PAST COLLEAGUE."
+    # )
+    # shared_experiences: Optional[bool] = Field(
+    #     default=None, description="Linkedin native filter : SHARED EXPERIENCES."
+    # )
+    # changed_jobs: Optional[bool] = Field(
+    #     default=None, description="Linkedin native filter : CHANGED JOBS."
+    # )
+    # posted_on_linkedin: Optional[bool] = Field(
+    #     default=None, description="Linkedin native filter : POSTED ON LINKEDIN."
+    # )
+    # mentionned_in_news: Optional[bool] = Field(
+    #     default=None, description="Linkedin native filter : MENTIONNED IN NEWS."
+    # )
+    # persona: Optional[list[str]] = Field(
+    #     default=None,
+    #     description="The ID of the parameter. Use type PERSONA on the List search parameters route to find out the right ID.\nLinkedin native filter : PERSONA.",
+    #     min_length=1,
+    #     pattern="^\\d+$",
+    # )
+    # account_lists: Optional[AccountLists] = Field(
+    #     default=None, description="Linkedin native filter : ACCOUNT LISTS."
+    # )
+    # lead_lists: Optional[LeadLists] = Field(
+    #     default=None, description="Linkedin native filter : LEAD LISTS."
+    # )
+    # viewed_profile_recently: Optional[bool] = Field(
+    #     default=None,
+    #     description="Linkedin native filter : PEOPLE YOU INTERACTED WITH / VIEWED PROFILE.",
+    # )
+    # messaged_recently: Optional[bool] = Field(
+    #     default=None,
+    #     description="Linkedin native filter : PEOPLE YOU INTERACTED WITH / MESSAGED.",
+    # )
+    # include_saved_leads: Optional[bool] = Field(
+    #     default=None,
+    #     description="Linkedin native filter : SAVED LEADS AND ACCOUNTS / ALL MY SAVED LEADS.",
+    # )
+    # include_saved_accounts: Optional[bool] = Field(
+    #     default=None,
+    #     description="Linkedin native filter : SAVED LEADS AND ACCOUNTS / ALL MY SAVED ACCOUNTS.",
+    # )
+# /SALES NAV PAYLOAD END
+
 class LinkedinURLSearchPayload(BaseModel):
     api: Literal["classic"] = "classic"
     category: Literal["people"] = "people"
@@ -884,16 +1183,6 @@ class WebhookAttendee(BaseModel):
     attendee_profile_url: str
 
 
-class WebhookAttachment(BaseModel):
-    id: str
-    size: AttachementSize
-    sticker: str
-    unavailable: str
-    mimetype: str
-    type: str
-    url: str
-
-
 class AccountInfo(BaseModel):
     # WARN: unify this field
     type: AccountType
@@ -901,21 +1190,21 @@ class AccountInfo(BaseModel):
     user_id: str
 
 
-# class MessageEventResponse(BaseModel):
-#     account_id: str
-#     account_type: AccountType
-#     account_info: AccountInfo
-#     event: Literal["message_received", "message_reaction", "message_read"]
-#     chat_id: str
-#     timestamp: str
-#     webhook_name: str
-#     message_id: str
-#     message: str|None = None
-#     sender: WebhookAttendee
-#     attendees: list[WebhookAttendee]
-#     attachments: WebhookAttachment|None = None
-#     reaction: str|None = None
-#     reaction_sender: WebhookAttendee|None = None
+class MessageEventResponse(BaseModel):
+    account_id: str
+    account_type: AccountType
+    account_info: AccountInfo
+    event: Literal["message_received", "message_reaction", "message_read"]
+    chat_id: str
+    timestamp: str
+    webhook_name: str
+    message_id: str
+    message: str|None = None
+    sender: WebhookAttendee
+    attendees: list[WebhookAttendee]
+    attachments: list[Any]|None = None  # TODO: implement pydantic model
+    reaction: str|None = None
+    reaction_sender: WebhookAttendee|None = None
 
 # class WebhookFormat(str, Enum):
 #     """
