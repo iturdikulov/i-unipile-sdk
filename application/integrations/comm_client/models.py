@@ -700,6 +700,10 @@ class LinkedinSearchPayload(BaseModel):
     )
     advanced_keywords: AdvancedKeywords | None = None
 
+    network_distance: list[NetworkDistanceEnum|Literal["GROUP"]]|None = Field(
+        default=None,
+        description="First, second, third+ degree or GROUP.\nLinkedin native filter : CONNECTION.",
+    )
 class LinkedinURLSearchPayload(BaseModel):
     api: Literal["classic"] = "classic"
     category: Literal["people"] = "people"
