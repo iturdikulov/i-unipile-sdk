@@ -164,6 +164,23 @@ class Client(BaseClient):
         self.client.__exit__(exc_type, exc_value, traceback)
         del self._clients[-1]
 
+    def _verify_connected_account(self, account_id: str) -> None:
+        """
+        Verify Linkedin account by checking if we have it in unipile database.
+        """
+        request = self._build_request(
+            "GET",
+            f"accounts/{account_id}",
+        )
+
+        try:
+            response = self.client.send(request)
+            response.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            raise LinkedinLoginError(f"Failed to verify {account_id} account: {e.response.text}")
+        except httpx.TimeoutException:
+            raise RequestTimeoutError()
+
     def close(self) -> None:
         """
         Close the connection pool of the current inner client.
@@ -195,20 +212,9 @@ class Client(BaseClient):
         except httpx.TimeoutException:
             raise RequestTimeoutError()
 
-        # Verify we don't get 404 error here, otherwise raise account login error, sometimes (when
-        # we switch master unipile account) cursor in query can invoke 404 error and this isn't
-        # linkedin account connection error, so we need to avoid raising LinkedinLoginError in this
-        # case.
-        # TODO: maybe need to explictly check account connection during this situation?
-        # send raw request to check account connection
-        if response.is_error and query and query.get("account_id") and not query.get("cursor"):
-            response_type = APIErrorTypes[response.status_code]
-            response_body = response.json()
-
-            if response_type == NotFoundType and \
-                response_body.get("type") == NotFoundType.ERRORS_RESOURCE_NOT_FOUND:
-
-                raise LinkedinLoginError()
+        # Verify that the account is still connected
+        if response.is_error and query and query.get("account_id"):
+            self._verify_connected_account(query["account_id"])
 
         return self._parse_response(response)
 
