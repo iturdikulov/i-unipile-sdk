@@ -10,12 +10,15 @@ from typing import TYPE_CHECKING, Any
 from typing_extensions import Annotated
 from pydantic import StringConstraints
 
+from application.config import Config
 from application.integrations.comm_client.models import (
     ChatAttendeesResponse,
     ChatsMessagesResponse,
     ChatsResponse,
     ChatsSendMessageResponse,
     CommonSearchParameter,
+    LinkedinCompanyProfile,
+    LinkedinSalesNavSearchPayload,
     LinkedinSearchParametersResponse,
     LinkedinSearchPayload,
     LinkedinURLSearchPayload,
@@ -300,9 +303,9 @@ class SearchEndpoint(Endpoint):
     def search(
         self,
         account_id: Annotated[str, StringConstraints(min_length=1)],
-        payload: LinkedinSearchPayload|LinkedinURLSearchPayload,
+        payload: LinkedinSearchPayload | LinkedinSalesNavSearchPayload | LinkedinURLSearchPayload,
         cursor: str | None = None,
-        limit: int = 10,
+        limit: int|None = None,
     ) -> SearchResponse:
         """
         Search people and companies from the Linkedin Classic as well as Sales Navigator APIs.
@@ -311,6 +314,21 @@ class SearchEndpoint(Endpoint):
 
         Endpoint documentation: https://developer.unipile.com/reference/linkedincontroller_search
         """
+
+        # Set default limit
+        if limit is None:
+            is_sales_search = False
+            if isinstance(payload, LinkedinSalesNavSearchPayload):
+                is_sales_search = True
+            elif isinstance(payload, LinkedinURLSearchPayload):
+                if payload.url.startswith("https://www.linkedin.com/sales/search"):
+                    is_sales_search = True
+            limit = (
+                Config.LINKEDIN_SEARCH_SALES_LEADS_PER_PAGE
+                if is_sales_search
+                else Config.LINKEDIN_SEARCH_DEFAULT_LEADS_PER_PAGE
+            )
+
         response = self.parent.request(
             path="linkedin/search",
             method="POST",
@@ -337,3 +355,20 @@ class SearchEndpoint(Endpoint):
             method="GET",
             query={"account_id": account_id, "type": type.value, "keywords": keywords},
         ))
+
+    def retrieve_company(
+        self,
+        account_id: Annotated[str, StringConstraints(min_length=1)],
+        identifier: Annotated[str, StringConstraints(min_length=1)],
+    ) -> LinkedinCompanyProfile:
+        """
+        Get a company profile from its name or ID.
+
+        Endpoint documentation: https://developer.unipile.com/reference/linkedincontroller_getcompanyprofile
+        """
+        return LinkedinCompanyProfile(**self.parent.request(
+            path=f"linkedin/company/{identifier}",
+            method="GET",
+            query={"account_id": account_id},
+        ))
+
