@@ -627,6 +627,11 @@ class ChatsMessagesResponse(BaseModel):
 class ChatsSendMessageResponse(BaseModel):
     object: Literal["MessageSent"]
     message_id: str = Field(..., description="The Unipile ID of the newly sent message.")
+
+class ChatsStartedResponse(BaseModel):
+    object: Literal["ChatStarted"]
+    chat_id: str = Field(..., description="The Unipile ID of the newly started chat.")
+    message_id: str = Field(..., description="The Unipile ID of the newly sent message.")
 # /--- Chat
 
 class LinkedinUsersInvitePayload(BaseModel):

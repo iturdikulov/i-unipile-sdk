@@ -16,6 +16,7 @@ from application.integrations.comm_client.models import (
     ChatsMessagesResponse,
     ChatsResponse,
     ChatsSendMessageResponse,
+    ChatsStartedResponse,
     CommonSearchParameter,
     LinkedinCompanyProfile,
     LinkedinSalesNavSearchPayload,
@@ -226,6 +227,30 @@ class MessagesEndpoint(Endpoint):
             method="POST",
             body={
                 "account_id": account_id,
+                "text": text,
+            }
+        ))
+
+    def send_message_to_attendees(
+        self,
+        attendees_ids: list[Annotated[str, StringConstraints(min_length=1)]],
+        account_id: Annotated[str, StringConstraints(min_length=1)],
+        text: str|None = None,
+    ) -> ChatsStartedResponse:
+        """
+        Start a new conversation with one or more attendee. ⚠️ Interactive documentation does not
+        work for Linkedin specific parameters (child parameters not correctly applied in snippet),
+        the correct format is linkedin[inmail] = true, linkedin[api]...
+
+        Endpoint documentation: https://developer.unipile.com/reference/chatscontroller_startnewchat
+        """
+
+        return ChatsStartedResponse(**self.parent.request(
+            path="chats",
+            method="POST",
+            body={
+                "account_id": account_id,
+                "attendees_ids": attendees_ids,
                 "text": text,
             }
         ))
