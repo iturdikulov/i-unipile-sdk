@@ -86,6 +86,7 @@ class BaseClient:
         client.headers = httpx.Headers(
             {
                 "User-Agent": "salesloop/comm_client",
+                "accept": "application/json",
             }
         )
         if self.options.auth:
