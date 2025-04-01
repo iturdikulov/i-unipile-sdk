@@ -177,7 +177,7 @@ class PeopleSearchResult(BaseModel):
     location: str | None = None
     industry: str | None = None
     keywords_match: str | None = None
-    headline: str
+    headline: str | None = None
     connections_count: int | None = None
     pending_invitation: bool | None = None
     can_send_inmail: bool | None = None
