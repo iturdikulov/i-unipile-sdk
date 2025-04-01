@@ -76,7 +76,7 @@ class UsersEndpoint(Endpoint):
         """
         return LinkedinUserProfile(
             **self.parent.request(
-                path=f"users/{identifier}",
+                path=f"users/{identifier}/",  # NOTE: that slash is required, otherwise it will return 301
                 method="GET",
                 query={"account_id": account_id},
             )
