@@ -1178,9 +1178,9 @@ class ConnectAccountResponse(BaseModel):
 
 class WebhookAttendee(BaseModel):
     attendee_id: str
-    attendee_name: str
+    attendee_name: str|None = None
     attendee_provider_id: str
-    attendee_profile_url: str
+    attendee_profile_url: str|None = None
 
 
 class AccountInfo(BaseModel):
