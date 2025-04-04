@@ -18,6 +18,8 @@ from application.integrations.comm_client.models import (
     ChatsSendMessageResponse,
     ChatsStartedResponse,
     CommonSearchParameter,
+    LinkedinAccountsConnect,
+    LinkedinAccountsConnectResponse,
     LinkedinCompanyProfile,
     LinkedinSalesNavSearchPayload,
     LinkedinSearchParametersResponse,
@@ -44,6 +46,24 @@ class Endpoint:
 class UsersEndpoint(Endpoint):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+
+    def connect(
+        self,
+        payload: LinkedinAccountsConnect,
+    ) -> LinkedinAccountsConnectResponse:
+        """
+        Link to Uniple an account of the given type and provider.
+
+        Endpoint documentation: https://developer.unipile.com/reference/accountscontroller_createaccount
+        """
+
+        return LinkedinAccountsConnectResponse(
+            **self.parent.request(
+                path="accounts",
+                method="POST",
+                body=payload.model_dump(exclude_none=True),
+            )
+        )
 
     def me(
         self,

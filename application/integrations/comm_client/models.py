@@ -16,6 +16,60 @@ class AccountType(str, Enum):
 
 # ---
 
+# Account connection params
+class DisabledFeature(str, Enum):
+    LINKEDIN_RECRUITER = "linkedin_recruiter"
+    LINKEDIN_SALES_NAVIGATOR = "linkedin_sales_navigator"
+    LINKEDIN_ORGANIZATIONS_MAILBOXES = "linkedin_organizations_mailboxes"
+
+
+class LinkedinAccountsConnect(BaseModel):
+    """
+    Authenticate using cookies
+    """
+    user_agent: str = Field(
+        description='If encountering disconnection issues, enter the exact user agent of the browser on which the account has been connected. You can easily retrieve it in the browser\'s console with this command : "console.log(navigator.userAgent)"',
+    )
+    access_token: str = Field(
+        description='Linkedin access token, which is to be found under the key "li_at".',
+    )
+    premium_token: str|None = Field(
+        default=None,
+        description='Linkedin Recruiter/Sales Navigator authentication cookie, which is to be found under the key "li_a". It should be used if you need to be logged to an existing session. It not provided, a new session will be started.',
+    )
+
+    recruiter_contract_id: str|None = Field(
+        default=None,
+        description="The contract that should be used with Linkedin Recruiter.",
+    )
+
+    country: str|None = Field(
+        default=None,
+        description="An ISO 3166-1 A-2 country code to be set as proxy's location.",
+        max_length=2,
+        min_length=2,
+    )
+    ip: str|None = Field(
+        default=None, description="An IPv4 address to infer proxy's location."
+    )
+    disabled_features: list[DisabledFeature]|None = Field(
+        default=None,
+        description="An array of features that should be disabled for this account.",
+    )
+    sync_limit: Any|None = Field(  # NOTE: here can be used real model
+        default=None,
+        description="Set a sync limit either for chats, messages or both. Chats limit will apply to each inbox, whereas messages limit will apply to each chat. No value will not apply any limit (default behaviour). Providers partial support.",
+    )
+    provider: Literal["LINKEDIN"] = "LINKEDIN"
+    proxy: Any|None = None  # NOTE: here can be used real model
+
+
+class LinkedinAccountsConnectResponse(BaseModel):
+    object: Literal["AccountCreated"]
+    account_id: str = Field(
+        description="A unique identifier.", min_length=1, title="UniqueId"
+    )
+# ---
 
 class SearchQuery(BaseModel):
     cursor: str | None
