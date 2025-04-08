@@ -1245,7 +1245,7 @@ class WebhookAttendee(BaseModel):
 class AccountInfo(BaseModel):
     # WARN: unify this field
     type: AccountType
-    feature: Literal["classic"]
+    feature: str
     user_id: str
 
 
