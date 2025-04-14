@@ -231,7 +231,7 @@ class MessagesEndpoint(Endpoint):
         self,
         chat_id: Annotated[str, StringConstraints(min_length=1)],
         account_id: Annotated[str, StringConstraints(min_length=1)],
-        text: str|None = None,
+        text: str|None = None,  # WARN: need to add restrictions here!
     ) -> ChatsSendMessageResponse:
         """
         Send a message to the given chat with the possibility to link some attachments.

@@ -702,7 +702,7 @@ class LinkedinUsersInvitePayload(BaseModel):
     message: str|None = Field(
         default=None,
         description="An optional message to go with the invitation (max 300 chars).",
-        max_length=300,
+        # max_length=300, # WARN: are we able to hande this on our side?
     )
 
 class LinkedinUsersInviteResponse(BaseModel):
