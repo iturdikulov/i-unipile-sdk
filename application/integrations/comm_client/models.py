@@ -573,7 +573,7 @@ class Chat(BaseModel):
     subject: str | None = None
     organization_id: str | None = Field(default=None, description="Linkedin specific ID for organization mailboxes.")
     mailbox_id: str | None = Field(default=None, description="Linkedin specific ID for organization mailboxes.")
-    content_type: Literal["inmail", "sponsored", "linkedin_offer"] | None = None
+    content_type: Literal["inmail", "sponsored", "linkedin_offer", "invitation"] | None = None
     folder: list[Literal["INBOX", "INBOX_LINKEDIN_CLASSIC", "INBOX_LINKEDIN_RECRUITER", "INBOX_LINKEDIN_SALES_NAVIGATOR", "INBOX_LINKEDIN_ORGANIZATION"]] | None = None
 
 class ChatsResponse(BaseModel):
