@@ -1251,8 +1251,8 @@ class AccountInfo(BaseModel):
 
 class MessageEventResponse(BaseModel):
     account_id: str
-    account_type: AccountType
-    account_info: AccountInfo
+    account_type: AccountType|None = None
+    account_info: AccountInfo|None = None
     event: Literal["message_received", "message_reaction", "message_read"]
     chat_id: str
     timestamp: str
