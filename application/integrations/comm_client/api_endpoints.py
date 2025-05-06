@@ -12,6 +12,7 @@ from pydantic import StringConstraints
 
 from application.config import Config
 from application.integrations.comm_client.models import (
+    Accounts,
     ChatAttendeesResponse,
     ChatsMessagesResponse,
     ChatsResponse,
@@ -280,16 +281,17 @@ class AccountsEndpoint(Endpoint):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
-    def accounts(self, cursor: str|None = None, limit: int = 100) -> SyncAsync[Any]:
+    def accounts(self, cursor: str|None = None, limit: int = 100) -> Accounts:
         """
         Returns a list of the accounts linked to Unipile.
 
         Endpoint documentation: https://developer.unipile.com/reference/accountscontroller_listaccounts
         """
-        return self.parent.request(
+        return Accounts(**self.parent.request(
             path="accounts",
             method="GET",
-        )
+            query={"cursor": cursor, "limit": limit},
+        ))
 
     def delete(
         self,
