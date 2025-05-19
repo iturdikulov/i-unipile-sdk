@@ -8,11 +8,13 @@ from dataclasses import dataclass
 from os import environ
 from types import TracebackType
 from typing import Any, Self
+from venv import logger
 import httpx
 from http import HTTPStatus
 from httpx import Request, Response
 from pydantic import BaseModel
 
+from application.config import Config
 from application.integrations.comm_client.models import APIErrorTypes, NotFoundType
 from application.integrations.linkedin.exceptions import LinkedinLoginError
 from .api_endpoints import (
@@ -114,7 +116,12 @@ class BaseClient:
             try:
                 body = error.response.json()
                 type = APIErrorTypes[response.status_code]
-                raise APIResponseError(response=response, type=type, body=body)
+
+                # NOTE: verify auth with specific error types
+                if body['type'] in ('errors/expired_credentials', 'errors/disconnected_account'):
+                    raise LinkedinLoginError(f"Failed to verify account with response body: {body}")
+                else:
+                    raise APIResponseError(response=response, type=type, body=body)
             except json.JSONDecodeError:
                 raise HTTPResponseError(error.response)
 
