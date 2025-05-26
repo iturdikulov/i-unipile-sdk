@@ -1303,6 +1303,29 @@ class WebhookAttendee(BaseModel):
     attendee_profile_url: str|None = None
 
 
+class WebhooksAccountStatus(BaseModel):
+    account_status: AccountStatus = Field(..., alias="AccountStatus")
+
+
+class AccountStatus(BaseModel):
+    account_id: str
+    account_type: str
+    message: Literal[
+        "OK",
+        "ERROR",
+        "STOPPED",
+        "CREDENTIALS",
+        "CONNECTING",
+        "DELETED",
+        "CREATION_SUCCESS",
+        "RECONNECTED",
+        "SYNC_SUCCESS"
+    ]
+
+    def is_failed(self) -> bool:
+        return self.message in ["ERROR", "STOPPED", "CREDENTIALS", "DELETED"]
+
+
 class AccountInfo(BaseModel):
     # WARN: unify this field
     type: AccountType
