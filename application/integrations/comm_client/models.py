@@ -1308,6 +1308,7 @@ class WebhooksAccountStatus(BaseModel):
 
 
 class AccountStatus(BaseModel):
+    "Documentation: https://developer.unipile.com/docs/account-lifecycle"
     account_id: str
     account_type: str
     message: Literal[
