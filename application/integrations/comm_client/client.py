@@ -1,6 +1,7 @@
 """
 Synchronous and asynchronous clients for unipile's API.
 """
+
 import json
 import logging
 from abc import abstractmethod
@@ -8,14 +9,10 @@ from dataclasses import dataclass
 from os import environ
 from types import TracebackType
 from typing import Any, Self
-from venv import logger
 import httpx
-from http import HTTPStatus
 from httpx import Request, Response
-from pydantic import BaseModel
 
-from application.config import Config
-from application.integrations.comm_client.models import APIErrorTypes, NotFoundType
+from application.integrations.comm_client.models import APIErrorTypes
 from application.integrations.linkedin.exceptions import LinkedinLoginError
 from .api_endpoints import (
     MessagesEndpoint,
@@ -30,7 +27,7 @@ from .errors import (
     RequestTimeoutError,
 )
 from .logging import make_console_logger
-from .typing import SyncAsync
+
 
 @dataclass
 class ClientOptions:
@@ -48,12 +45,14 @@ class ClientOptions:
         logger: A custom logger.
         unipile_version: unipile version to use.
     """
+
     auth: str = environ["UNIPILE_ACCESS_TOKEN"]
     base_url: str = f"https://{environ['UNIPILE_BASE_URL']}"
     timeout_ms: int = 60_000
     log_level: int = logging.WARNING
     logger: logging.Logger | None = None
     unipile_version: str = "v1"
+
 
 class BaseClient:
     def __init__(
@@ -105,9 +104,7 @@ class BaseClient:
         headers = httpx.Headers()
         self.logger.info(f"{method} {self.client.base_url}{path}")
         self.logger.debug(f"=> {query} -- {body}")
-        return self.client.build_request(
-            method, path, params=query, json=body, headers=headers
-        )
+        return self.client.build_request(method, path, params=query, json=body, headers=headers)
 
     def _parse_response(self, response: Response) -> dict:
         try:
@@ -118,8 +115,10 @@ class BaseClient:
                 type = APIErrorTypes[response.status_code]
 
                 # NOTE: verify auth with specific error types
-                if body['type'] in ('errors/expired_credentials', 'errors/disconnected_account'):
-                    raise LinkedinLoginError(f"Failed to verify account with response body: {body}")
+                if body["type"] in ("errors/expired_credentials", "errors/disconnected_account"):
+                    raise LinkedinLoginError(
+                        f"Failed to verify account with response body: {body}"
+                    )
                 else:
                     raise APIResponseError(response=response, type=type, body=body)
             except json.JSONDecodeError:
@@ -140,6 +139,7 @@ class BaseClient:
     ) -> dict:
         # noqa
         pass
+
 
 class Client(BaseClient):
     """
@@ -225,6 +225,7 @@ class Client(BaseClient):
             self._verify_connected_account(query["account_id"])
 
         return self._parse_response(response)
+
 
 class AsyncClient(BaseClient):
     """
