@@ -2,8 +2,7 @@
 
 This module defines the exceptions that can be raised when an error occurs.
 """
-from dataclasses import dataclass
-from enum import Enum
+
 from typing import Any
 
 import httpx
@@ -34,11 +33,9 @@ class HTTPResponseError(Exception):
     headers: httpx.Headers
     body: str
 
-    def __init__(self, response: httpx.Response, message: str|None = None) -> None:
+    def __init__(self, response: httpx.Response, message: str | None = None) -> None:
         if message is None:
-            message = (
-                f"Request to Unipile API failed with status: {response.status_code}"
-            )
+            message = f"Request to Unipile API failed with status: {response.status_code}"
         super().__init__(message)
         self.status = response.status_code
         self.headers = response.headers
@@ -57,7 +54,6 @@ class APIResponseError(HTTPResponseError):
         body: dict,
     ) -> None:
         super().__init__(response, body["detail"])
-        print(body)
         self.title = body.get("title")
         self.instance = body.get("instance")
         self.error = type(body["type"])
