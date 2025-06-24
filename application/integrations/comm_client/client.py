@@ -91,7 +91,7 @@ class BaseClient:
             }
         )
         if self.options.auth:
-            client.headers["X-API-KEY"] = f"{self.options.auth}"
+            client.headers["X-API-KEY"] = self.options.auth
         self._clients.append(client)
 
     def _build_request(
