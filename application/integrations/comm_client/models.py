@@ -5,6 +5,7 @@ from typing import Any, Literal, Union
 
 from pydantic import BaseModel, Field
 
+
 class AccountType(str, Enum):
     LINKEDIN = "LINKEDIN"
     WHATSAPP = "WHATSAPP"
@@ -28,6 +29,7 @@ class Accounts(BaseModel):
     cursor: str | None = None
     limit: int | None = None
 
+
 class AccountSource(BaseModel):
     id: str
     status: Union[
@@ -39,17 +41,17 @@ class AccountSource(BaseModel):
         Literal["CONNECTING"],
     ] = Field(..., title="AccountSourceServiceStatus")
 
+
 class AccountSignature(BaseModel):
     title: str
     content: str
+
 
 class LinkedinAccount(BaseModel):
     object: Literal["Account"]
     type: Literal["LINKEDIN"]
     connection_params: LinkedinAccountConnectionParams
-    id: str = Field(
-        ..., description="A unique identifier.", min_length=1, title="UniqueId"
-    )
+    id: str = Field(..., description="A unique identifier.", min_length=1, title="UniqueId")
     name: str
     created_at: str = Field(
         ...,
@@ -57,15 +59,17 @@ class LinkedinAccount(BaseModel):
         examples=["2025-12-31T23:59:59.999Z"],
         # pattern="^[1-2]\\d{3}-[0-1]\\d-[0-3]\\dT\\d{2}:\\d{2}:\\d{2}.\\d{3}Z$",
     )
-    current_signature: str|None = Field(
+    current_signature: str | None = Field(
         default=None, description="A unique identifier.", min_length=1, title="UniqueId"
     )
-    signatures: list[AccountSignature]|None = None
+    signatures: list[AccountSignature] | None = None
     groups: list[str]
     sources: list[AccountSource]
 
+
 class LinkedinAccountConnectionParams(BaseModel):
     im: LinkedinAccountIM
+
 
 class LinkedinAccountOrganization(BaseModel):
     name: str
@@ -73,63 +77,65 @@ class LinkedinAccountOrganization(BaseModel):
     organization_urn: str
     mailbox_urn: str
 
+
 class LinkedinAccountIM(BaseModel):
     id: str
     username: str
-    publicIdentifier: str|None = None
+    publicIdentifier: str | None = None
     premium_id: Union[str, Any] = Field(..., alias="premiumId")
     premium_contract_id: Union[str, Any] = Field(..., alias="premiumContractId")
-    premium_features: list[ApiType]|None = Field(default=None, alias="premiumFeatures")
+    premium_features: list[ApiType] | None = Field(default=None, alias="premiumFeatures")
     organizations: list[LinkedinAccountOrganization]
-    proxy: None|Any = None
+    proxy: None | Any = None
+
 
 class LinkedinAccountsConnect(BaseModel):
     """
     Authenticate using cookies
     """
+
     user_agent: str = Field(
         description='If encountering disconnection issues, enter the exact user agent of the browser on which the account has been connected. You can easily retrieve it in the browser\'s console with this command : "console.log(navigator.userAgent)"',
     )
     access_token: str = Field(
         description='Linkedin access token, which is to be found under the key "li_at".',
     )
-    premium_token: str|None = Field(
+    premium_token: str | None = Field(
         default=None,
         description='Linkedin Recruiter/Sales Navigator authentication cookie, which is to be found under the key "li_a". It should be used if you need to be logged to an existing session. It not provided, a new session will be started.',
     )
 
-    recruiter_contract_id: str|None = Field(
+    recruiter_contract_id: str | None = Field(
         default=None,
         description="The contract that should be used with Linkedin Recruiter.",
     )
 
-    country: str|None = Field(
+    country: str | None = Field(
         default=None,
         description="An ISO 3166-1 A-2 country code to be set as proxy's location.",
         max_length=2,
         min_length=2,
     )
-    ip: str|None = Field(
-        default=None, description="An IPv4 address to infer proxy's location."
-    )
-    disabled_features: list[DisabledFeature]|None = Field(
+    ip: str | None = Field(default=None, description="An IPv4 address to infer proxy's location.")
+    disabled_features: list[DisabledFeature] | None = Field(
         default=None,
         description="An array of features that should be disabled for this account.",
     )
-    sync_limit: Any|None = Field(  # NOTE: here can be used real model
+    sync_limit: Any | None = Field(  # NOTE: here can be used real model
         default=None,
         description="Set a sync limit either for chats, messages or both. Chats limit will apply to each inbox, whereas messages limit will apply to each chat. No value will not apply any limit (default behaviour). Providers partial support.",
     )
     provider: Literal["LINKEDIN"] = "LINKEDIN"
-    proxy: Any|None = None  # NOTE: here can be used real model
+    proxy: Any | None = None  # NOTE: here can be used real model
 
 
 class LinkedinAccountsConnectResponse(BaseModel):
     object: Literal["AccountCreated"]
-    account_id: str = Field(
-        description="A unique identifier.", min_length=1, title="UniqueId"
-    )
+    account_id: str = Field(description="A unique identifier.", min_length=1, title="UniqueId")
+
+
 # ---
+
 
 class SearchQuery(BaseModel):
     cursor: str | None
@@ -176,8 +182,8 @@ class DateRange(BaseModel):
 
 
 class TenureInfo(BaseModel):
-    years: int|None = None
-    months: int|None = None
+    years: int | None = None
+    months: int | None = None
 
 
 class Position(BaseModel):
@@ -219,19 +225,22 @@ class LastOutreachActivity(BaseModel):
     type: Literal["SEND_MESSAGE", "ACCEPT_INVITATION"]
     performed_at: str
 
+
 class LinkedinCompanyMessaging(BaseModel):
     is_enabled: bool
-    id: str|None = None
-    entity_urn:  str|None = None
+    id: str | None = None
+    entity_urn: str | None = None
+
 
 class LinkedinCompanyLocation(BaseModel):
     is_headquarter: bool
-    country: str
-    city: str
-    postal_code: str|None = Field(default=None, alias="postalCode")
-    street: list[str]
-    description: str|None = None
-    area: str|None = None
+    country: str | None = None
+    city: str | None = None
+    postal_code: str | None = Field(default=None, alias="postalCode")
+    street: list[str] | None = None
+    description: str | None = None
+    area: str | None = None
+
 
 class LinkedinCompanyProfile(BaseModel):
     object: Literal["CompanyProfile"]
@@ -241,10 +250,10 @@ class LinkedinCompanyProfile(BaseModel):
     entity_urn: str
     public_identifier: str
     profile_url: str
-    tagline: str|None = None
-    followers_count: float|None = None
-    is_followable: bool|None = None
-    is_employee: bool|None = None
+    tagline: str | None = None
+    followers_count: float | None = None
+    is_followable: bool | None = None
+    is_employee: bool | None = None
     messaging: LinkedinCompanyMessaging
     claimed: bool
     viewer_permissions: Any  # TODO: use real model here
@@ -259,19 +268,19 @@ class LinkedinCompanyProfile(BaseModel):
         | Literal["PARTNERSHIP"]
         | Any
     )
-    locations: list[LinkedinCompanyLocation]
-    logo: str|None = None
-    localized_description: list[dict[str, Any]]|None = None
-    localized_name: list[dict[str, Any]]|None = None
-    localized_tagline: list[dict[str, Any]]|None = None
-    industry: list[str]|None = None
-    activities: list[str]|None = None
-    employee_count: float|None = None
-    employee_count_range: Any|None = None
-    website: str|None = None
-    foundation_date: str|None = None
-    phone: str|None = None
-    insights: Any|None = None # TODO: use real model here
+    locations: list[LinkedinCompanyLocation] | None = None
+    logo: str | None = None
+    localized_description: list[dict[str, Any]] | None = None
+    localized_name: list[dict[str, Any]] | None = None
+    localized_tagline: list[dict[str, Any]] | None = None
+    industry: list[str] | None = None
+    activities: list[str] | None = None
+    employee_count: float | None = None
+    employee_count_range: Any | None = None
+    website: str | None = None
+    foundation_date: str | None = None
+    phone: str | None = None
+    insights: Any | None = None  # TODO: use real model here
 
 
 # Search Result Models
@@ -426,10 +435,12 @@ class LinkedinUserMe(BaseModel):
     sales_navigator: LinkedinUserPlanInfo | LinkedinUserPlanDisconnected | None = None
     object: Literal["AccountOwnerProfile"]
 
+
 # --- User profile
 class Social(BaseModel):
     type: str
     name: str
+
 
 class ContactInfo(BaseModel):
     emails: list[str] | None = None
@@ -437,9 +448,11 @@ class ContactInfo(BaseModel):
     adresses: list[str] | None = None
     socials: list[Social] | None = None
 
+
 class Birthdate(BaseModel):
     month: float
     day: float
+
 
 class PrimaryLocale(BaseModel):
     country: str
@@ -547,10 +560,14 @@ class LinkedinUserProfile(BaseModel):
     follower_count: float | None = None
     connections_count: float | None = None
     shared_connections_count: float | None = None
-    network_distance: Literal["FIRST_DEGREE", "SECOND_DEGREE", "THIRD_DEGREE", "OUT_OF_NETWORK"] | None = None
+    network_distance: (
+        Literal["FIRST_DEGREE", "SECOND_DEGREE", "THIRD_DEGREE", "OUT_OF_NETWORK"] | None
+    ) = None
     public_profile_url: str | None = None
     object: Literal["UserProfile"]
-#/ --- User profile
+
+
+# / --- User profile
 
 
 # --- specifc
@@ -558,21 +575,28 @@ class LinkedinSpecificUserData(BaseModel):
     """
     Provider specific user's additional data for Linkedin.
     """
+
     provider: Literal["LINKEDIN"]
     member_urn: str
-    occupation: str|None = None
-    network_distance: Literal["SELF", "DISTANCE_1", "DISTANCE_2", "DISTANCE_3", "OUT_OF_NETWORK"] | None = None
+    occupation: str | None = None
+    network_distance: (
+        Literal["SELF", "DISTANCE_1", "DISTANCE_2", "DISTANCE_3", "OUT_OF_NETWORK"] | None
+    ) = None
     pending_invitation: bool | None = None
     location: str | None = None
     headline: str | None = None
     contact_info: ContactInfo | None = None
+
+
 # /--- specific
+
 
 # --- User relation
 class UsersRelationsResponse(BaseModel):
     object: Literal["UserRelationsList"]
     items: list[UserRelation]
     cursor: Any
+
 
 class UserRelation(BaseModel):
     object: Literal["UserRelation"]
@@ -585,14 +609,18 @@ class UserRelation(BaseModel):
     member_id: str
     member_urn: str
     connection_urn: str
-    profile_picture_url: str|None = None
+    profile_picture_url: str | None = None
+
+
 # / -- user relation
+
 
 # --- Chat
 class ChatAttendeesResponse(BaseModel):
     object: Literal["ChatAttendeeList"]
     items: list[ChatAttendee]
-    cursor: str|None
+    cursor: str | None
+
 
 class ChatAttendee(BaseModel):
     object: Literal["ChatAttendee"]
@@ -610,49 +638,69 @@ class ChatAttendee(BaseModel):
         default=None, description="Provider specific additional data."
     )
 
+
 class Chat(BaseModel):
     object: Literal["Chat"]
-    id: str = Field(
-        ..., description="A unique identifier.", min_length=1, title="UniqueId"
-    )
+    id: str = Field(..., description="A unique identifier.", min_length=1, title="UniqueId")
     account_id: str = Field(
         ..., description="A unique identifier.", min_length=1, title="UniqueId"
     )
     account_type: AccountType
     provider_id: str
-    attendee_provider_id: str|None = None
+    attendee_provider_id: str | None = None
 
-    name: str|None = None
+    name: str | None = None
     type: Literal[0, 1, 2]
     timestamp: str
     unread_count: int
     archived: Literal[0, 1]
     muted_until: Literal[-1] | str | None = None
     read_only: Literal[0, 1]
-    disabled_features: list[Literal["reactions", "reply"]] | None = Field(default=None, alias="disabledFeatures")
+    disabled_features: list[Literal["reactions", "reply"]] | None = Field(
+        default=None, alias="disabledFeatures"
+    )
     subject: str | None = None
-    organization_id: str | None = Field(default=None, description="Linkedin specific ID for organization mailboxes.")
-    mailbox_id: str | None = Field(default=None, description="Linkedin specific ID for organization mailboxes.")
+    organization_id: str | None = Field(
+        default=None, description="Linkedin specific ID for organization mailboxes."
+    )
+    mailbox_id: str | None = Field(
+        default=None, description="Linkedin specific ID for organization mailboxes."
+    )
     content_type: Literal["inmail", "sponsored", "linkedin_offer", "invitation"] | None = None
-    folder: list[Literal["INBOX", "INBOX_LINKEDIN_CLASSIC", "INBOX_LINKEDIN_RECRUITER", "INBOX_LINKEDIN_SALES_NAVIGATOR", "INBOX_LINKEDIN_ORGANIZATION"]] | None = None
+    folder: (
+        list[
+            Literal[
+                "INBOX",
+                "INBOX_LINKEDIN_CLASSIC",
+                "INBOX_LINKEDIN_RECRUITER",
+                "INBOX_LINKEDIN_SALES_NAVIGATOR",
+                "INBOX_LINKEDIN_ORGANIZATION",
+            ]
+        ]
+        | None
+    ) = None
+
 
 class ChatsResponse(BaseModel):
     object: Literal["ChatList"]
     items: list[Chat]
     cursor: Any
 
+
 # ---
 class AttachementSize(BaseModel):
     width: float
     height: float
 
+
 class Attachment(BaseModel):
     id: str
-    file_size: float|None
+    file_size: float | None
     unavailable: bool
     mimetype: str | None = None
     url: str | None = None
     url_expires_at: float | None = None
+
 
 class AttachementImg(Attachment):
     type: Literal["img"]
@@ -668,7 +716,7 @@ class AttachmentVideo(Attachment):
 
 class AttachmentAudio(Attachment):
     type: Literal["audio"]
-    duration: float|None = None
+    duration: float | None = None
     voice_note: bool
 
 
@@ -686,6 +734,7 @@ class MessageReaction(BaseModel):
     sender_id: str
     is_sender: bool
 
+
 class MessageQuoted(BaseModel):
     provider_id: str
     sender_id: str
@@ -694,12 +743,15 @@ class MessageQuoted(BaseModel):
         Union[AttachementImg, AttachmentVideo, AttachmentAudio, AttachmentFile, AttachmentPost]
     ]
 
+
 class Message(BaseModel):
     object: Literal["Message"]
     provider_id: str
     sender_id: str
-    text: str|None = None
-    attachments: list[AttachementImg | AttachmentVideo | AttachmentAudio | AttachmentFile | AttachmentPost]
+    text: str | None = None
+    attachments: list[
+        AttachementImg | AttachmentVideo | AttachmentAudio | AttachmentFile | AttachmentPost
+    ]
     id: str = Field(
         ..., description="A unique identifier.", min_length=1, title="Unique message id"
     )
@@ -723,47 +775,56 @@ class Message(BaseModel):
     edited: Literal[0, 1]
     is_event: Literal[0, 1]
     delivered: Literal[0, 1]
-    behavior: Literal[0]|Any
+    behavior: Literal[0] | Any
 
-    event_type: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]|None = None
+    event_type: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | None = None
     original: str
     replies: float | None = None
     reply_by: list[str] | None = None
-    parent: str | None = Field(default=None, description="A unique parent identifier.", min_length=1)
-    sender_attendee_id: str = Field(description="A unique sender attendee identifier.", min_length=1)
+    parent: str | None = Field(
+        default=None, description="A unique parent identifier.", min_length=1
+    )
+    sender_attendee_id: str = Field(
+        description="A unique sender attendee identifier.", min_length=1
+    )
     subject: str | None = None
+
 
 class ChatsMessagesResponse(BaseModel):
     object: Literal["MessageList"]
     items: list[Message]
     cursor: Any
 
+
 class ChatsSendMessageResponse(BaseModel):
     object: Literal["MessageSent"]
     message_id: str = Field(..., description="The Unipile ID of the newly sent message.")
+
 
 class ChatsStartedResponse(BaseModel):
     object: Literal["ChatStarted"]
     chat_id: str = Field(..., description="The Unipile ID of the newly started chat.")
     message_id: str = Field(..., description="The Unipile ID of the newly sent message.")
+
+
 # /--- Chat
+
 
 class LinkedinUsersInvitePayload(BaseModel):
     provider_id: str = Field(
         ..., description="The id of the user to add. It has to be the provider’s id."
     )
-    account_id: str = Field(
-        ..., description="The id of the account where the user will be added."
-    )
-    user_email: str|None = Field(
+    account_id: str = Field(..., description="The id of the account where the user will be added.")
+    user_email: str | None = Field(
         default=None,
         description="The email address of the user when it's required (Linkedin specific).",
     )
-    message: str|None = Field(
+    message: str | None = Field(
         default=None,
         description="An optional message to go with the invitation (max 300 chars).",
         # max_length=300, # WARN: are we able to hande this on our side?
     )
+
 
 class LinkedinUsersInviteResponse(BaseModel):
     object: Literal["UserInvitationSent"]
@@ -771,9 +832,10 @@ class LinkedinUsersInviteResponse(BaseModel):
     usage: float | None = Field(
         default=None,
         description="A percentage of query usage based on the limit set by the"
-                    "provider. Triggers only on passing a new landing "
-                    "(50, 75, 90, 95)."
+        "provider. Triggers only on passing a new landing "
+        "(50, 75, 90, 95).",
     )
+
 
 # Search
 class NetworkDistanceEnum(IntEnum):
@@ -880,13 +942,14 @@ class SalesNavPayloadLocation(BaseModel):
     """
     Linkedin native filter : GEOGRAPHY.
     """
-    include: list[str]|None = Field(
+
+    include: list[str] | None = Field(
         default=None,
         description="The ID of the parameter. Use type LOCATION on the List search parameters route to find out the right ID.",
         min_length=1,
         # pattern="^\\d+$",
     )
-    exclude: list[str]|None = Field(
+    exclude: list[str] | None = Field(
         default=None,
         description="The ID of the parameter. Use type LOCATION on the List search parameters route to find out the right ID.",
         min_length=1,
@@ -898,70 +961,77 @@ class SalesNavPayloadIndustry(BaseModel):
     """
     Linkedin native filter : INDUSTRY.
     """
-    include: list[str]|None = Field(
+
+    include: list[str] | None = Field(
         default=None,
         description="The ID of the parameter. Use type INDUSTRY on the List search parameters route to find out the right ID.",
         min_length=1,
         # pattern="^\\d+$",
     )
-    exclude: list[str]|None = Field(
+    exclude: list[str] | None = Field(
         default=None,
         description="The ID of the parameter. Use type INDUSTRY on the List search parameters route to find out the right ID.",
         min_length=1,
         # pattern="^\\d+$",
     )
 
+
 class SalesNavPayloadSchool(BaseModel):
     """
     Linkedin native filter : SCHOOL.
     """
-    include: list[str]|None = Field(
+
+    include: list[str] | None = Field(
         default=None,
         description="The ID of the parameter. Use type SCHOOL on the List search parameters route to find out the right ID.",
         min_length=1,
         # pattern="^\\d+$",
     )
-    exclude: list[str]|None = Field(
+    exclude: list[str] | None = Field(
         default=None,
         description="The ID of the parameter. Use type SCHOOL on the List search parameters route to find out the right ID.",
         min_length=1,
         # pattern="^\\d+$",
     )
+
 
 class SalesNavPayloadCompany(BaseModel):
     """
     Linkedin native filter : CURRENT COMPANY.
     """
 
-    include: list[str]|None = Field(
+    include: list[str] | None = Field(
         default=None,
         description="The ID of the parameter. Use type COMPANY on the List search parameters route to find out the right ID.",
         min_length=1,
         # pattern="^\\d+$",
     )
-    exclude: list[str]|None = Field(
+    exclude: list[str] | None = Field(
         default=None,
         description="The ID of the parameter. Use type COMPANY on the List search parameters route to find out the right ID.",
         min_length=1,
         # pattern="^\\d+$",
     )
 
+
 class SalesNavPayloadRole(BaseModel):
     """
     Linkedin native filter : CURRENT JOB TITLE.
     """
-    include: list[str]|None = Field(
+
+    include: list[str] | None = Field(
         default=None,
         description="The ID of the parameter. Use type JOB_TITLE on the List search parameters route to find out the right ID.",
         min_length=1,
         # pattern="^\\d+$",
     )
-    exclude: list[str]|None = Field(
+    exclude: list[str] | None = Field(
         default=None,
         description="The ID of the parameter. Use type JOB_TITLE on the List search parameters route to find out the right ID.",
         min_length=1,
         # pattern="^\\d+$",
     )
+
 
 class TenureMin(float, Enum):
     NUMBER_0 = 0
@@ -970,63 +1040,62 @@ class TenureMin(float, Enum):
     NUMBER_6 = 6
     NUMBER_10 = 10
 
+
 class TenureMax(float, Enum):
     NUMBER_1 = 1
     NUMBER_2 = 2
     NUMBER_5 = 5
     NUMBER_10 = 10
 
+
 class TenureItem(BaseModel):
-    min: TenureMin|None = None
-    max: TenureMax|None = None
+    min: TenureMin | None = None
+    max: TenureMax | None = None
+
 
 class LinkedinSalesNavSearchPayload(BaseModel):
     api: Literal["sales_navigator"] = "sales_navigator"
     category: Literal["people"] = "people"
-    keywords: str|None = Field(
-        default=None, description="Linkedin native filter : KEYWORDS."
-    )
-    saved_search_id: str|None = Field(
+    keywords: str | None = Field(default=None, description="Linkedin native filter : KEYWORDS.")
+    saved_search_id: str | None = Field(
         default=None,
         description="The ID of the parameter. Use type SAVED_SEARCHES on the List search parameters route to find out the right ID.\nOverrides all other parameters.",
         # pattern="^\\d+$",
     )
-    recent_search_id: str|None = Field(
+    recent_search_id: str | None = Field(
         default=None,
         description="The ID of the parameter. Use type RECENT_SEARCHES on the List search parameters route to find out the right ID.\nOverrides all other parameters.",
         # pattern="^\\d+$",
     )
-    location: SalesNavPayloadLocation|None = Field(
+    location: SalesNavPayloadLocation | None = Field(
         default=None, description="Linkedin native filter : GEOGRAPHY."
     )
-    industry:  SalesNavPayloadIndustry|None = Field(
+    industry: SalesNavPayloadIndustry | None = Field(
         default=None, description="Linkedin native filter : INDUSTRY."
     )
-    first_name: str|None = Field(
+    first_name: str | None = Field(
         default=None, description="Linkedin native filter : FIRST NAME."
     )
-    last_name: str|None = Field(
-        default=None, description="Linkedin native filter : LAST NAME."
-    )
-    tenure: list[TenureItem]|None = Field(
+    last_name: str | None = Field(default=None, description="Linkedin native filter : LAST NAME.")
+    tenure: list[TenureItem] | None = Field(
         default=None, description="Linkedin native filter : YEARS OF EXPERIENCE."
     )
-    groups: list[str]|None = Field(
+    groups: list[str] | None = Field(
         default=None,
         description="The ID of the parameter. Use type GROUPS on the List search parameters route to find out the right ID.\nLinkedin native filter : GROUPS.",
         min_length=1,
         # pattern="^\\d+$",
     )
-    school: SalesNavPayloadSchool|None = Field(
+    school: SalesNavPayloadSchool | None = Field(
         default=None, description="Linkedin native filter : SCHOOL."
     )
-    profile_language: list[str]|None = Field(
+    profile_language: list[str] | None = Field(
         default=None,
         description="ISO 639-1 language code.\nLinkedin native filter : PROFILE LANGUAGE.",
         max_length=2,
         min_length=2,
     )
-    company: SalesNavPayloadCompany|None = Field(
+    company: SalesNavPayloadCompany | None = Field(
         default=None, description="Linkedin native filter : CURRENT COMPANY."
     )
     # company_headcount: Optional[list[CompanyHeadcountItem]] = Field(
@@ -1048,7 +1117,7 @@ class LinkedinSalesNavSearchPayload(BaseModel):
     # function: Optional[Function] = Field(
     #     default=None, description="Linkedin native filter : FUNCTION."
     # )
-    role: SalesNavPayloadRole|None = Field(
+    role: SalesNavPayloadRole | None = Field(
         default=None, description="Linkedin native filter : CURRENT JOB TITLE."
     )
     # tenure_at_role: Optional[list[TenureAtRoleItem]] = Field(
@@ -1067,7 +1136,7 @@ class LinkedinSalesNavSearchPayload(BaseModel):
     #     default=None,
     #     description="Linkedin native filter : VIEWED YOUR PROFILE RECENTLY.",
     # )
-    network_distance: list[NetworkDistanceEnum|Literal["GROUP"]]|None = Field(
+    network_distance: list[NetworkDistanceEnum | Literal["GROUP"]] | None = Field(
         default=None,
         description="First, second, third+ degree or GROUP.\nLinkedin native filter : CONNECTION.",
     )
@@ -1120,7 +1189,10 @@ class LinkedinSalesNavSearchPayload(BaseModel):
     #     default=None,
     #     description="Linkedin native filter : SAVED LEADS AND ACCOUNTS / ALL MY SAVED ACCOUNTS.",
     # )
+
+
 # /SALES NAV PAYLOAD END
+
 
 class LinkedinURLSearchPayload(BaseModel):
     api: Literal["classic"] = "classic"
@@ -1130,6 +1202,7 @@ class LinkedinURLSearchPayload(BaseModel):
         min_length=32,
         pattern=r"^https:\/\/www\.linkedin\.com\/(search\/results\/people\/|sales\/search\/people|recruiter\/search)",
     )
+
 
 class CommonSearchParameter(str, Enum):
     LOCATION = "LOCATION"
@@ -1186,6 +1259,7 @@ class SearchResultsPaging(BaseModel):
     page_count: int = Field(ge=0)
     total_count: int = Field(ge=0)
 
+
 # --- ERRORS
 class BadRequestType(str, Enum):
     ERRORS_INVALID_PARAMETERS = "errors/invalid_parameters"
@@ -1195,6 +1269,7 @@ class BadRequestType(str, Enum):
     ERRORS_TOO_MANY_CHARACTERS = "errors/too_many_characters"
     ERRORS_UNESCAPED_CHARACTERS = "errors/unescaped_characters"
     ERRORS_MISSING_PARAMETERS = "errors/missing_parameters"
+
 
 class UnauthorizedType(str, Enum):
     ERRORS_MISSING_CREDENTIALS = "errors/missing_credentials"
@@ -1212,6 +1287,7 @@ class UnauthorizedType(str, Enum):
     ERRORS_EXPIRED_LINK = "errors/expired_link"
     ERRORS_WRONG_ACCOUNT = "errors/wrong_account"
 
+
 class ForbiddenType(str, Enum):
     ERRORS_ACCOUNT_RESTRICTED = "errors/account_restricted"
     ERRORS_INSUFFICIENT_PERMISSIONS = "errors/insufficient_permissions"
@@ -1220,9 +1296,11 @@ class ForbiddenType(str, Enum):
     ERRORS_UNKNOWN_AUTHENTICATION_CONTEXT = "errors/unknown_authentication_context"
     ERRORS_RESOURCE_ACCESS_RESTRICTED = "errors/resource_access_restricted"
 
+
 class NotFoundType(str, Enum):
     ERRORS_RESOURCE_NOT_FOUND = "errors/resource_not_found"
     ERRORS_INVALID_RESOURCE_IDENTIFIER = "errors/invalid_resource_identifier"
+
 
 class UnprocessableEntityType(str, Enum):
     ERRORS_INVALID_ACCOUNT = "errors/invalid_account"
@@ -1251,16 +1329,20 @@ class UnprocessableEntityType(str, Enum):
     ERRORS_PROVIDER_UNREACHABLE = "errors/provider_unreachable"
     ERRORS_ACCOUNT_CONFIGURATION_ERROR = "errors/account_configuration_error"
 
+
 class TooManyRequestsErrorType(str, Enum):
     ERRORS_TOO_MANY_REQUESTS = "errors/too_many_requests"
+
 
 class InternalServerErrorType(str, Enum):
     ERRORS_UNEXPECTED_ERROR = "errors/unexpected_error"
     ERRORS_PROVIDER_ERROR = "errors/provider_error"
     ERRORS_AUTHENTICATION_INTENT_ERROR = "errors/authentication_intent_error"
 
+
 class NotImplementedErrorType(str, Enum):
     ERRORS_FEATURE_NOT_IMPLEMENTED = "errors/feature_not_implemented"
+
 
 class ServiceUnavailableErrorType(str, Enum):
     ERRORS_NO_CLIENT_SESSION = "errors/no_client_session"
@@ -1269,8 +1351,10 @@ class ServiceUnavailableErrorType(str, Enum):
     ERRORS_NETWORK_DOWN = "errors/network_down"
     ERRORS_SERVICE_UNAVAILABLE = "errors/service_unavailable"
 
+
 class RequestTimeoutErrorType(str, Enum):
     ERRORS_REQUEST_TIMEOUT = "errors/request_timeout"
+
 
 APIErrorTypes = {
     400: BadRequestType,

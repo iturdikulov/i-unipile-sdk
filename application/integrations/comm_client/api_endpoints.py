@@ -447,8 +447,10 @@ class SearchEndpoint(Endpoint):
 
         if url_or_name.isnumeric():
             company_slug = url_or_name  # We do double verification, even if id passed!
-        elif url_or_name.startswith("https://www.linkedin.com/company/") or url_or_name.startswith(
-            "https://linkedin.com/company/"
+        elif (
+            url_or_name.startswith("https://www.linkedin.com/company/")
+            or url_or_name.startswith("https://linkedin.com/company/")
+            or url_or_name.startswith("https://linkedin.com/companies/")
         ):
             company_slug = url_or_name.split("/")[-1]
 
