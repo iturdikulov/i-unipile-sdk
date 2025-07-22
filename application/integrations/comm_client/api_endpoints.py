@@ -6,11 +6,13 @@ Unipile API endpoints.
 
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlparse
 
 from typing_extensions import Annotated
 from pydantic import StringConstraints
 
 from application.config import Config
+from application.integrations.comm_client.errors import APIResponseError
 from application.integrations.comm_client.models import (
     Accounts,
     ChatAttendeesResponse,
@@ -30,9 +32,11 @@ from application.integrations.comm_client.models import (
     LinkedinUserProfile,
     LinkedinUsersInvitePayload,
     LinkedinUsersInviteResponse,
+    NotFoundType,
     SearchResponse,
     UsersRelationsResponse,
 )
+from application.utils.urls import reminds_url
 
 from .typing import AccountLinkType, AccountProvider, SyncAsync
 
@@ -43,6 +47,7 @@ if TYPE_CHECKING:  # pragma: no cover
 class Endpoint:
     def __init__(self, parent: "BaseClient") -> None:
         self.parent = parent
+
 
 class UsersEndpoint(Endpoint):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -184,8 +189,8 @@ class MessagesEndpoint(Endpoint):
         self,
         attendee_id: str,
         account_id: Annotated[str, StringConstraints(min_length=1)],
-        cursor: str|None = None,
-        limit: int = 100
+        cursor: str | None = None,
+        limit: int = 100,
     ):
         """
         Returns a list of chats where a given attendee is involved.
@@ -208,9 +213,9 @@ class MessagesEndpoint(Endpoint):
     def messages(
         self,
         chat_id: Annotated[str, StringConstraints(min_length=1)],
-        sender_id: Annotated[str, StringConstraints(min_length=1)]|None = None,
-        cursor: str|None = None,
-        limit: int = 100
+        sender_id: Annotated[str, StringConstraints(min_length=1)] | None = None,
+        cursor: str | None = None,
+        limit: int = 100,
     ):
         """
         Returns a list of chats where a given attendee is involved.
@@ -218,21 +223,21 @@ class MessagesEndpoint(Endpoint):
         Endpoint documentation: https://developer.unipile.com/reference/chatattendeescontroller_listchatsbyattendee
         """
         response = self.parent.request(
-                path=f"chats/{chat_id}/messages",
-                method="GET",
-                query={
-                    "sender_id": sender_id,
-                    "cursor": cursor,
-                    "limit": limit,
-                },
-            )
+            path=f"chats/{chat_id}/messages",
+            method="GET",
+            query={
+                "sender_id": sender_id,
+                "cursor": cursor,
+                "limit": limit,
+            },
+        )
         return ChatsMessagesResponse(**response)
 
     def send_message(
         self,
         chat_id: Annotated[str, StringConstraints(min_length=1)],
         account_id: Annotated[str, StringConstraints(min_length=1)],
-        text: str|None = None,  # WARN: need to add restrictions here!
+        text: str | None = None,  # WARN: need to add restrictions here!
     ) -> ChatsSendMessageResponse:
         """
         Send a message to the given chat with the possibility to link some attachments.
@@ -243,20 +248,22 @@ class MessagesEndpoint(Endpoint):
         Endpoint documentation: https://developer.unipile.com/reference/chatscontroller_sendmessageinchat
         """
 
-        return ChatsSendMessageResponse(**self.parent.request(
-            path=f"chats/{chat_id}/messages",
-            method="POST",
-            body={
-                "account_id": account_id,
-                "text": text,
-            }
-        ))
+        return ChatsSendMessageResponse(
+            **self.parent.request(
+                path=f"chats/{chat_id}/messages",
+                method="POST",
+                body={
+                    "account_id": account_id,
+                    "text": text,
+                },
+            )
+        )
 
     def send_message_to_attendees(
         self,
         attendees_ids: list[Annotated[str, StringConstraints(min_length=1)]],
         account_id: Annotated[str, StringConstraints(min_length=1)],
-        text: str|None = None,
+        text: str | None = None,
     ) -> ChatsStartedResponse:
         """
         Start a new conversation with one or more attendee. ⚠️ Interactive documentation does not
@@ -266,32 +273,36 @@ class MessagesEndpoint(Endpoint):
         Endpoint documentation: https://developer.unipile.com/reference/chatscontroller_startnewchat
         """
 
-        return ChatsStartedResponse(**self.parent.request(
-            path="chats",
-            method="POST",
-            body={
-                "account_id": account_id,
-                "attendees_ids": attendees_ids,
-                "text": text,
-            }
-        ))
+        return ChatsStartedResponse(
+            **self.parent.request(
+                path="chats",
+                method="POST",
+                body={
+                    "account_id": account_id,
+                    "attendees_ids": attendees_ids,
+                    "text": text,
+                },
+            )
+        )
 
 
 class AccountsEndpoint(Endpoint):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
-    def accounts(self, cursor: str|None = None, limit: int = 100) -> Accounts:
+    def accounts(self, cursor: str | None = None, limit: int = 100) -> Accounts:
         """
         Returns a list of the accounts linked to Unipile.
 
         Endpoint documentation: https://developer.unipile.com/reference/accountscontroller_listaccounts
         """
-        return Accounts(**self.parent.request(
-            path="accounts",
-            method="GET",
-            query={"cursor": cursor, "limit": limit},
-        ))
+        return Accounts(
+            **self.parent.request(
+                path="accounts",
+                method="GET",
+                query={"cursor": cursor, "limit": limit},
+            )
+        )
 
     def delete(
         self,
@@ -302,26 +313,31 @@ class AccountsEndpoint(Endpoint):
             method="DELETE",
         )
 
+
 class HostedEndpoint(Endpoint):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
-    def link(self,
-             expiries_on: datetime,
-             api_url: str,
-             success_redirect_url: str|None = None,
-             failure_redirect_url: str|None = None,
-             notify_url: str|None = None,
-             name: str|None = None,
-             type: AccountLinkType = "create",
-             providers: list[AccountProvider] = ["LINKEDIN"]) -> SyncAsync[Any]:
+    def link(
+        self,
+        expiries_on: datetime,
+        api_url: str,
+        success_redirect_url: str | None = None,
+        failure_redirect_url: str | None = None,
+        notify_url: str | None = None,
+        name: str | None = None,
+        type: AccountLinkType = "create",
+        providers: list[AccountProvider] = ["LINKEDIN"],
+    ) -> SyncAsync[Any]:
         """
         Create a url which redirect to Unipile's hosted authentication to connect or reconnect an account.
 
         Endpoint documentation: https://developer.unipile.com/reference/hostedcontroller_requestlink
         """
 
-        expiries_on_str = f"{expiries_on.strftime('%Y-%m-%dT%H:%M:%S')}.{str(expiries_on.microsecond)[:3]}Z"
+        expiries_on_str = (
+            f"{expiries_on.strftime('%Y-%m-%dT%H:%M:%S')}.{str(expiries_on.microsecond)[:3]}Z"
+        )
 
         payload = {
             "type": type,
@@ -334,14 +350,11 @@ class HostedEndpoint(Endpoint):
             "failure_redirect_url": failure_redirect_url,
         }
 
-        return self.parent.request(
-            path="hosted/accounts/link",
-            method="POST",
-            body=payload
-        )
+        return self.parent.request(path="hosted/accounts/link", method="POST", body=payload)
 
     def retrieve(self):
         pass
+
 
 class SearchEndpoint(Endpoint):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -352,7 +365,7 @@ class SearchEndpoint(Endpoint):
         account_id: Annotated[str, StringConstraints(min_length=1)],
         payload: LinkedinSearchPayload | LinkedinSalesNavSearchPayload | LinkedinURLSearchPayload,
         cursor: str | None = None,
-        limit: int|None = None,
+        limit: int | None = None,
     ) -> SearchResponse:
         """
         Search people and companies from the Linkedin Classic as well as Sales Navigator APIs.
@@ -397,11 +410,13 @@ class SearchEndpoint(Endpoint):
 
         Endpoint documentation: https://developer.unipile.com/reference/linkedincontroller_getsearchparameterslist
         """
-        return LinkedinSearchParametersResponse(**self.parent.request(
-            path="linkedin/search/parameters",
-            method="GET",
-            query={"account_id": account_id, "type": type.value, "keywords": keywords},
-        ))
+        return LinkedinSearchParametersResponse(
+            **self.parent.request(
+                path="linkedin/search/parameters",
+                method="GET",
+                query={"account_id": account_id, "type": type.value, "keywords": keywords},
+            )
+        )
 
     def retrieve_company(
         self,
@@ -413,9 +428,57 @@ class SearchEndpoint(Endpoint):
 
         Endpoint documentation: https://developer.unipile.com/reference/linkedincontroller_getcompanyprofile
         """
-        return LinkedinCompanyProfile(**self.parent.request(
-            path=f"linkedin/company/{identifier}",
-            method="GET",
-            query={"account_id": account_id},
-        ))
+        return LinkedinCompanyProfile(
+            **self.parent.request(
+                path=f"linkedin/company/{identifier}",
+                method="GET",
+                query={"account_id": account_id},
+            )
+        )
 
+    def retrieve_company_id(
+        self,
+        account_id: Annotated[str, StringConstraints(min_length=1)],
+        url_or_name,
+    ) -> str | None:
+        url_or_name = url_or_name.strip()
+        url_or_name = url_or_name.rstrip("/")
+        company_slug = None
+
+        if url_or_name.isnumeric():
+            company_slug = url_or_name  # We do double verification, even if id passed!
+        elif url_or_name.startswith("https://www.linkedin.com/company/") or url_or_name.startswith(
+            "https://linkedin.com/company/"
+        ):
+            company_slug = url_or_name.split("/")[-1]
+
+        if company_slug:
+            self.parent.logger.info("Getting company id from slug %s", company_slug)
+            try:
+                company_id = self.retrieve_company(account_id, company_slug).id
+                return str(company_id)
+            except APIResponseError as e:
+                if e.error and e.error == NotFoundType.ERRORS_RESOURCE_NOT_FOUND:
+                    self.parent.logger.info("Company %s not found, skip processing", url_or_name)
+                    return
+                else:
+                    self.parent.logger.warning(f"Failed to get campaign with {e} error")
+                    raise
+            except Exception as e:
+                self.parent.logger.critical(f"Raised unknown exception {e}")
+                raise
+        else:
+            # If name is URL get domain name
+            if reminds_url(url_or_name):
+                url_or_name = urlparse(url_or_name).netloc
+
+            search_param = self.search_param(
+                account_id, type=CommonSearchParameter.COMPANY, keywords=url_or_name
+            )
+            if not search_param.items:
+                self.parent.logger.info("Company %s not found, skip processing", url_or_name)
+                return
+
+            company_id = str(search_param.items[0].id)
+
+        return company_id
