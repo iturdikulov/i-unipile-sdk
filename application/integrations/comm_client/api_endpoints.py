@@ -467,8 +467,8 @@ class SearchEndpoint(Endpoint):
                     self.parent.logger.warning(f"Failed to get campaign with {e} error")
                     raise
             except Exception as e:
-                self.parent.logger.critical(f"Raised unknown exception {e}")
-                raise
+                self.parent.logger.critical(f"Raised unknown exception {e} for {company_slug}")
+                return
         else:
             # If name is URL get domain name
             if reminds_url(url_or_name):
