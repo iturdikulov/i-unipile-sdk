@@ -154,6 +154,7 @@ class ApiType(str, Enum):
     CLASSIC = "classic"
     SALES_NAVIGATOR = "sales_navigator"
     RECRUITER = "recruiter"
+    PREMIUM = "premium"
 
 
 class CategoryType(str, Enum):
