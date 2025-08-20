@@ -28,6 +28,7 @@ from application.integrations.comm_client.models import (
     LinkedinSalesNavSearchPayload,
     LinkedinSearchParametersResponse,
     LinkedinSearchPayload,
+    LinkedinSection,
     LinkedinURLSearchPayload,
     LinkedinUserMe,
     LinkedinUserProfile,
@@ -93,6 +94,7 @@ class UsersEndpoint(Endpoint):
         self,
         account_id: Annotated[str, StringConstraints(min_length=1)],
         identifier: Annotated[str, StringConstraints(min_length=1)],
+        linkedin_section: LinkedinSection | None = None,
     ) -> LinkedinUserProfile:
         """
         Retrieve the profile of a user. Ensure careful implementation of this action and consult
@@ -101,11 +103,17 @@ class UsersEndpoint(Endpoint):
 
         Endpoint documentation: https://developer.unipile.com/reference/userscontroller_getprofilebyidentifier
         """
+
+        query = {"account_id": account_id}
+
+        if linkedin_section:
+            query["linkedin_sections"] = linkedin_section.value
+
         return LinkedinUserProfile(
             **self.parent.request(
                 path=f"users/{identifier}/",  # NOTE: that slash is required, otherwise it will return 301
                 method="GET",
-                query={"account_id": account_id},
+                query=query,
             )
         )
 

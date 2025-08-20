@@ -438,6 +438,19 @@ class LinkedinUserMe(BaseModel):
 
 
 # --- User profile
+class LinkedinSection(str, Enum):
+    EXPERIENCE = "experience"
+    EDUCATION = "education"
+    LANGUAGES = "languages"
+    SKILLS = "skills"
+    CERTIFICATIONS = "certifications"
+    ABOUT = "about"
+    VOLUNTEERING_EXPERIENCE = "volunteering_experience"
+    PROJECTS = "projects"
+    RECOMMENDATIONS_RECEIVED = "recommendations_received"
+    RECOMMENDATIONS_GIVEN = "recommendations_given"
+
+
 class Social(BaseModel):
     type: str
     name: str
