@@ -13,6 +13,7 @@ from pydantic import StringConstraints
 
 from application.config import Config
 from application.integrations.comm_client.errors import APIResponseError
+from application.integrations.comm_client.helpers import iterate_paginated_api
 from application.integrations.comm_client.models import (
     Accounts,
     ChatAttendeesResponse,
@@ -312,6 +313,27 @@ class AccountsEndpoint(Endpoint):
             path=f"accounts/{account_id}",
             method="DELETE",
         )
+
+    def duplicate_amount(self, account_type: str = "LINKEDIN") -> int:
+        """
+        Count duplicate connected accounts
+        """
+
+        im_ids = []
+        total_duplicates = 0
+
+        for acc in iterate_paginated_api(
+            self.accounts,
+            limit=250,
+            max_total=5000,  # NOTE: We checking only last 5000 accounts for performance reason
+        ):
+            if acc.type == account_type and acc.connection_params and acc.connection_params.im:
+                if acc.connection_params.im.id in im_ids:
+                    total_duplicates += 1
+                else:
+                    im_ids.append(acc.connection_params.im.id)
+
+        return total_duplicates
 
 
 class HostedEndpoint(Endpoint):
