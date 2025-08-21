@@ -57,3 +57,11 @@ class APIResponseError(HTTPResponseError):
         self.title = body.get("title")
         self.instance = body.get("instance")
         self.error = type(body["type"])
+
+
+class NoIdentifierToRetriveUser(Exception):
+    """
+    No identifier provided to retrieve user.
+    """
+
+    pass
