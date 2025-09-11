@@ -49,7 +49,7 @@ class ClientOptions:
     auth: str = environ["UNIPILE_ACCESS_TOKEN"]
     base_url: str = f"https://{environ['UNIPILE_BASE_URL']}"
     timeout_ms: int = 60_000
-    log_level: int = logging.WARNING
+    log_level: int = logging.INFO
     logger: logging.Logger | None = None
     unipile_version: str = "v1"
 
