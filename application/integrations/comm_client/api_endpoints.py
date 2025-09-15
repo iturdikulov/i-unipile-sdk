@@ -419,11 +419,13 @@ class SearchEndpoint(Endpoint):
                 else Config.LINKEDIN_SEARCH_DEFAULT_LEADS_PER_PAGE
             )
 
+        body_data = payload.model_dump(exclude_none=True)
+        self.parent.logger.info(f"LinkedIn search with body data: {body_data}")
         response = self.parent.request(
             path="linkedin/search",
             method="POST",
             query={"cursor": cursor, "account_id": account_id, "limit": limit},
-            body=payload.model_dump(exclude_none=True),
+            body=body_data,
         )
         return SearchResponse(**response)
 
