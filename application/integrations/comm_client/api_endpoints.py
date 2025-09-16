@@ -34,6 +34,7 @@ from application.integrations.comm_client.models import (
     LinkedinUserProfile,
     LinkedinUsersInvitePayload,
     LinkedinUsersInviteResponse,
+    NetworkDistance,
     NotFoundType,
     SearchResponse,
     UsersRelationsResponse,
@@ -396,6 +397,7 @@ class SearchEndpoint(Endpoint):
         payload: LinkedinSearchPayload | LinkedinSalesNavSearchPayload | LinkedinURLSearchPayload,
         cursor: str | None = None,
         limit: int | None = None,
+        max_limit: int = 100,
     ) -> SearchResponse:
         """
         Search people and companies from the Linkedin Classic as well as Sales Navigator APIs.
@@ -405,29 +407,70 @@ class SearchEndpoint(Endpoint):
         Endpoint documentation: https://developer.unipile.com/reference/linkedincontroller_search
         """
 
-        # Set default limit
-        if limit is None:
-            is_sales_search = False
-            if isinstance(payload, LinkedinSalesNavSearchPayload):
-                is_sales_search = True
-            elif isinstance(payload, LinkedinURLSearchPayload):
-                if payload.url.startswith("https://www.linkedin.com/sales/search"):
-                    is_sales_search = True
-            limit = (
-                Config.LINKEDIN_SEARCH_SALES_LEADS_PER_PAGE
-                if is_sales_search
-                else Config.LINKEDIN_SEARCH_DEFAULT_LEADS_PER_PAGE
+        if limit and limit > max_limit:
+            raise ValueError(
+                f"Invalid limit: {limit}. Maximum search limit (session) is {max_limit}"
             )
 
+        is_sales_search = False
+        if isinstance(payload, LinkedinSalesNavSearchPayload):
+            is_sales_search = True
+        elif isinstance(payload, LinkedinURLSearchPayload):
+            if payload.url.startswith("https://www.linkedin.com/sales/search"):
+                is_sales_search = True
+
+        # Linkedin Classic shouldn't exceed 50.
+        if limit and limit > 50 and not is_sales_search:
+            raise ValueError(
+                f"Invalid limit: {limit}. Maximum normal search limit (session) is 50"
+            )
+
+        request_limit = (
+            Config.LINKEDIN_SEARCH_SALES_LEADS_PER_PAGE
+            if is_sales_search
+            else Config.LINKEDIN_SEARCH_DEFAULT_LEADS_PER_PAGE
+        )
+
+        # Set default limit, since we filter users, on low limit value required to scrape slightly
+        # more users (compensation) so "minimal" limit is how much users linkedin search page return
+        if limit and limit > request_limit:
+            request_limit = limit
+
         body_data = payload.model_dump(exclude_none=True)
-        self.parent.logger.info(f"LinkedIn search with body data: {body_data}")
         response = self.parent.request(
             path="linkedin/search",
             method="POST",
-            query={"cursor": cursor, "account_id": account_id, "limit": limit},
+            query={"cursor": cursor, "account_id": account_id, "limit": request_limit},
             body=body_data,
         )
-        return SearchResponse(**response)
+
+        search_response = SearchResponse(**response)
+
+        # Filter out of network users
+        filtered_items = list(
+            filter(
+                lambda u: u.network_distance != NetworkDistance.OUT_OF_NETWORK,
+                search_response.items,
+            )
+        )
+        filtered_items_length = len(search_response.items) - len(filtered_items)
+        if filtered_items_length > 0:
+            self.parent.logger.info(
+                f"Filtered out leads due to being out of network: {filtered_items_length} "
+            )
+            search_response.items = filtered_items
+
+        # Apply global limit
+        if limit and len(search_response.items) > limit:
+            self.parent.logger.info(
+                f"Limiting leads due to limit param : {len(search_response.items) - request_limit} "
+            )
+            search_response.items = search_response.items[:limit]
+
+        self.parent.logger.info(
+            f"LinkedIn search completed with leads: {len(search_response.items)}, request data: {body_data}"
+        )
+        return search_response
 
     def search_param(
         self,
