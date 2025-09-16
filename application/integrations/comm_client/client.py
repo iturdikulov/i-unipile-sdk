@@ -155,7 +155,7 @@ class Client(BaseClient):
         **kwargs: Any,
     ) -> None:
         if client is None:
-            client = httpx.Client()
+            client = httpx.Client(transport=httpx.HTTPTransport(retries=2))
         super().__init__(client, options, **kwargs)
 
     def __enter__(self) -> Self:
