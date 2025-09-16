@@ -431,10 +431,15 @@ class SearchEndpoint(Endpoint):
             else Config.LINKEDIN_SEARCH_DEFAULT_LEADS_PER_PAGE
         )
 
-        # Set default limit, since we filter users, on low limit value required to scrape slightly
-        # more users (compensation) so "minimal" limit is how much users linkedin search page return
-        if limit and limit > request_limit:
-            request_limit = limit
+        if limit:
+            if limit > request_limit:
+                request_limit = limit
+
+            # Since we filter users, on low limit value required to scrape slightly
+            # more users (compensation), if 130% of limit less than 10, use 10
+            # this limitation also optimize sales nav search, because its 25 by default
+            elif limit * 1.3 < 10:
+                request_limit = 10
 
         body_data = payload.model_dump(exclude_none=True)
         response = self.parent.request(
@@ -463,7 +468,7 @@ class SearchEndpoint(Endpoint):
         # Apply global limit
         if limit and len(search_response.items) > limit:
             self.parent.logger.info(
-                f"Limiting leads due to limit param : {len(search_response.items) - request_limit} "
+                f"Limiting leads due to limit param: {len(search_response.items)} to {limit}"
             )
             search_response.items = search_response.items[:limit]
 
