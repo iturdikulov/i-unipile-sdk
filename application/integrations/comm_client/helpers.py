@@ -1,7 +1,10 @@
 """Utility functions for notion-sdk-py."""
+
 from typing import Any, AsyncGenerator, Awaitable, Callable, Dict, Generator, List
 from urllib.parse import urlparse
 from uuid import UUID
+
+from application.integrations.comm_client.models import LinkedinUserMe, LinkedinUserPlanInfo
 
 
 def pick(base: Dict[Any, Any], *keys: str) -> Dict[Any, Any]:
@@ -132,3 +135,12 @@ def is_mention_rich_text_item_response(rich_text: Dict[Any, Any]) -> bool:
     """Return `True` if `rich_text` is a mention."""
     return rich_text.get("type") == "mention"
 
+
+def get_premium_info(me: LinkedinUserMe) -> tuple[bool, bool]:
+    """
+    Return linkedin premium and sales navigator plan existence from
+    `LinkedinUserMe` object
+    """
+    return me.premium, me.sales_navigator is not None and isinstance(
+        me.sales_navigator, LinkedinUserPlanInfo
+    )
