@@ -442,6 +442,7 @@ class SearchEndpoint(Endpoint):
                 request_limit = 10
 
         body_data = payload.model_dump(exclude_none=True)
+        self.parent.logger.info(f"Starting LinkedIn search with body_data: {body_data}")
         response = self.parent.request(
             path="linkedin/search",
             method="POST",
@@ -473,7 +474,7 @@ class SearchEndpoint(Endpoint):
             search_response.items = search_response.items[:limit]
 
         self.parent.logger.info(
-            f"LinkedIn search completed with leads: {len(search_response.items)}, request data: {body_data}"
+            f"LinkedIn search completed with leads: {len(search_response.items)}"
         )
         return search_response
 
