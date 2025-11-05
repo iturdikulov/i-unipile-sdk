@@ -9,13 +9,81 @@ dependencies = [
     "pydantic>=2.10.6",
 ]
 
+[dependency-groups]
+dev = [
+    "basedpyright>=1.32.1",
+    "ruff>=0.14.3",
+]
+
+[tool.basedpyright]
+pythonVersion = "3.9"
+typeCheckingMode = "basic"
+
+# Disable some reporting, to avoid interference with ruff
+reportFunctionMemberAccess = false
+reportMissingImports = false
+reportMissingModuleSource = false
+reportImportCycles = false
+reportUnusedImport = false
+reportUnusedClass = false
+reportUnusedFunction = false
+reportUnusedVariable = false
+reportDuplicateImport = false
+reportWildcardImportFromLibrary = false
+reportAbstractUsage = false
+reportAttributeAccessIssue = false
+reportCallIssue = false
+reportInconsistentOverload = false
+reportIndexIssue = false
+reportNoOverloadImplementation = false
+reportOperatorIssue = false
+reportOptionalSubscript = false
+reportOptionalMemberAccess = false
+reportOptionalCall = false
+reportOptionalIterable = false
+reportOptionalContextManager = false
+reportOptionalOperand = false
+reportRedeclaration = false
+reportPrivateUsage = false
+reportPrivateImportUsage = false
+reportConstantRedefinition = false
+reportDeprecated = false
+reportIncompatibleMethodOverride = false
+reportIncompatibleVariableOverride = false
+reportInconsistentConstructor = false
+reportOverlappingOverload = false
+reportPossiblyUnboundVariable = false
+reportMissingSuperCall = false
+reportUninitializedInstanceVariable = false
+reportInvalidStringEscapeSequence = false
+reportCallInDefaultInitializer = false
+reportUnnecessaryIsInstance = false
+reportUnnecessaryCast = false
+reportUnnecessaryComparison = false
+reportUnnecessaryContains = false
+reportAssertAlwaysTrue = false
+reportSelfClsParameterName = false
+reportImplicitStringConcatenation = false
+reportUndefinedVariable = false
+reportUnboundVariable = false
+reportUnhashable = false
+reportUnsupportedDunderAll = false
+reportUnusedCallResult = false
+reportUnusedCoroutine = false
+reportUnusedExcept = false
+reportUnusedExpression = false
+reportMatchNotExhaustive = false
+reportImplicitOverride = false
+reportShadowedImports = false
+
 [tool.ruff]
 line-length = 79
 indent-width = 4
 target-version = "py39"
 
+# Disable some duplicate diagnostic from pyright
+# Source: https://github.com/DetachHead/basedpyright/blob/main/pyproject.toml
 [tool.ruff.lint]
-# On top of the default `select` (`E4`, E7`, `E9`, and `F`), enable flake8-bugbear (`B`) and flake8-quotes (`Q`).
 extend-select = ["B", "Q"]
 
 [tool.ruff.format]
