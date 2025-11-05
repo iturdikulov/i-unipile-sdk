@@ -1,4 +1,6 @@
-"""Utility functions for notion-sdk-py."""
+"""
+Utility functions
+"""
 
 from typing import Any, AsyncGenerator, Awaitable, Callable, Dict, Generator, List
 from urllib.parse import urlparse
@@ -16,23 +18,6 @@ def pick(base: Dict[Any, Any], *keys: str) -> Dict[Any, Any]:
             continue
         result[key] = value
     return result
-
-
-def get_url(object_id: str) -> str:
-    """Return the URL for the object with the given id."""
-    return f"https://notion.so/{UUID(object_id).hex}"
-
-
-def get_id(url: str) -> str:
-    """Return the id of the object behind the given URL."""
-    parsed = urlparse(url)
-    if parsed.netloc not in ("notion.so", "www.notion.so"):
-        raise ValueError("Not a valid Unipile URL.")
-    path = parsed.path
-    if len(path) < 32:
-        raise ValueError("The path in the URL seems to be incorrect.")
-    raw_id = path[-32:]
-    return str(UUID(raw_id))
 
 
 def iterate_paginated_api(
