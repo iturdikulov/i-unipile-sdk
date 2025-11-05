@@ -5,8 +5,10 @@
 ### 1.1 Project Structure & Dependencies
 
 - [x] Add `pyproject.toml` for packaging and dependency management (`uv`).
-- [ ] Refactoring tools initialize (dev)
-- [ ] Move project specific files into unipile_sdk
+- [x] Refactoring tools initialize (dev)
+- [x] Move project specific files into unipile_sdk
+- [x] Tooling setup
+- [ ] pre-commit setup: add basedpyright, other tools
 - [ ] Test quickstart
 - [ ] Verify models files, remove `models_old.py`
 - [ ] Add `__version__` to `__init__.py`.
