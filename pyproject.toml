@@ -11,8 +11,22 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "basedpyright>=1.32.1",
     "ruff>=0.14.3",
+    "basedpyright>=1.32.1",
+    "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
+    "pytest-xdist>=3.8.0",
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = [
+    "-n", "auto",  # Auto-detect CPU count
+    "--dist", "loadscope",  # Group by module
+]
+testpaths = [
+    "tests",
+    "integration",
 ]
 
 [tool.basedpyright]
