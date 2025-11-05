@@ -4,8 +4,11 @@
 
 ### 1.1 Project Structure & Dependencies
 
+- [x] Add `pyproject.toml` for packaging and dependency management (`uv`).
+- [ ] Refactoring tools initialize (dev)
+- [ ] Move project specific files into unipile_sdk
+- [ ] Test quickstart
 - [ ] Verify models files, remove `models_old.py`
-- [ ] Add `pyproject.toml` for packaging and dependency management (`uv`).
 - [ ] Add `__version__` to `__init__.py`.
 
 ### 1.2 Code Cleanup
@@ -49,6 +52,7 @@
 ### 3.1 Framework Setup
 
 - [ ] Set up `pytest` and `pytest-recording` (for caching), maybe `pytest-asyncio`, `pytest-httpx`, and `pytest-cov`.
+- [ ] Automatic tests on multiple python versions
 
 ### 3.2 Test Suites
 
@@ -60,6 +64,13 @@
     - [ ] Test each endpoint method for correct behavior and error handling.
 - [ ] **Helpers (`tests/test_helpers.py`)**
     - [ ] Test all helper functions.
+
+### 3.3 Integration tests
+
+- [ ] Test async search with more than 50 requests for pagination and rate limiting.
+- [ ] Verify full workflow: authentication, request sending, and response handling.
+- [ ] Test error scenarios: invalid authentication, rate limits, and network failures.
+- [ ] Record general and features related demo videos
 
 ## Phase 4: Documentation and Examples
 
