@@ -8,10 +8,12 @@
 - [x] Refactoring tools initialize (dev)
 - [x] Move project specific files into unipile_sdk
 - [x] Tooling setup
-- [ ] pre-commit setup: add basedpyright, other tools
+    - [ ] pre-commit setup, basedpyright, ruff in pyproject.toml
+    - [ ] pytest, pytest-cov
 - [ ] Test quickstart
 - [ ] Verify models files, remove `models_old.py`
 - [ ] Add `__version__` to `__init__.py`.
+- [ ] typeCheckingMode switch from basic to "recommended"
 
 ### 1.2 Code Cleanup
 
