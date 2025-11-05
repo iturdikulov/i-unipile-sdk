@@ -8,13 +8,13 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
-from typing_extensions import Annotated
+from typing import Annotated
 from pydantic import StringConstraints
 
-from application.config import Config
-from application.integrations.comm_client.errors import APIResponseError
-from application.integrations.comm_client.helpers import iterate_paginated_api
-from application.integrations.comm_client.models import (
+from .config import Config
+from .errors import APIResponseError
+from .helpers import iterate_paginated_api
+from .models import (
     Accounts,
     ChatAttendeesResponse,
     ChatsMessagesResponse,
@@ -39,7 +39,7 @@ from application.integrations.comm_client.models import (
     SearchResponse,
     UsersRelationsResponse,
 )
-from application.utils.urls import reminds_url
+from .helpers import reminds_url
 
 from .typing import AccountLinkType, AccountProvider, SyncAsync
 

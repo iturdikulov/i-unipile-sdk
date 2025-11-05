@@ -12,8 +12,8 @@ from typing import Any, Self
 import httpx
 from httpx import Request, Response
 
-from application.integrations.comm_client.models import APIErrorTypes
-from application.integrations.linkedin.exceptions import LinkedinLoginError
+from .models import APIErrorTypes
+from .errors import LinkedinLoginError
 from .api_endpoints import (
     MessagesEndpoint,
     AccountsEndpoint,
