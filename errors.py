@@ -65,3 +65,11 @@ class NoIdentifierToRetriveUser(Exception):
     """
 
     pass
+
+
+class LinkedinLoginError(Exception):
+    """
+    An error related to Linkedin login.
+    """
+
+    pass
