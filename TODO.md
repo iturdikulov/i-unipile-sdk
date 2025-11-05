@@ -11,7 +11,7 @@
 ### 1.2 Code Cleanup
 
 - [ ] Remove unused imports and variables across the project.
-- [ ] Configure tooling
+- [ ] Configure tooling: ruff + mypy, vulture, pyupgrade, trailing-whitespace, end-of-file-fixer
 
 ### 1.3 Model Improvements
 
@@ -65,7 +65,7 @@
 
 ### 4.1 Docstrings
 
-- [ ] Fix all broken links in docstrings.
+- [ ] Fix/verify all links in docstrings.
 - [ ] Ensure consistent docstring style.
 - [ ] Add examples to docstrings.
 
