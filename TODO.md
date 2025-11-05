@@ -11,7 +11,7 @@
 ### 1.2 Code Cleanup
 
 - [ ] Remove unused imports and variables across the project.
-- [ ] Configure tooling: ruff + mypy, vulture, pyupgrade, trailing-whitespace, end-of-file-fixer
+- [ ] Configure tooling: ruff + mypy, basedpyright, vulture, pyupgrade, trailing-whitespace, end-of-file-fixer
 
 ### 1.3 Model Improvements
 
@@ -71,4 +71,5 @@
 
 ### 4.2 API Documentation
 
+- [ ] Examples directory
 - [ ] Generate API documentation using `swagger`?.
