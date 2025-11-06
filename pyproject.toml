@@ -3,7 +3,7 @@ name = "i-unipile-sdk"
 version = "0.1.0"
 description = "Python SDK for interacting with Unipile API."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "httpx>=0.28.1",
     "pydantic>=2.10.6",
@@ -21,16 +21,17 @@ dev = [
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = [
-    "-n", "auto",  # Auto-detect CPU count
+    "-v",
     "--dist", "loadscope",  # Group by module
 ]
 testpaths = [
     "tests",
     "integration",
 ]
+log_cli = true
+log_cli_level = "INFO"
 
 [tool.basedpyright]
-pythonVersion = "3.9"
 typeCheckingMode = "basic"
 
 # Disable some reporting, to avoid interference with ruff
