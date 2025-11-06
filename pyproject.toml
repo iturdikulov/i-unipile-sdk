@@ -88,7 +88,6 @@ reportUnusedExcept = false
 reportUnusedExpression = false
 reportMatchNotExhaustive = false
 reportImplicitOverride = false
-reportShadowedImports = false
 
 [tool.ruff]
 line-length = 79
