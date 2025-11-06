@@ -11,7 +11,6 @@ from urllib.parse import urlparse
 from typing import Annotated
 from pydantic import StringConstraints
 
-from .config import Config
 from .errors import APIResponseError
 from .helpers import iterate_paginated_api
 from .models import (
@@ -407,6 +406,10 @@ class SearchEndpoint(Endpoint):
         Endpoint documentation: https://developer.unipile.com/reference/linkedincontroller_search
         """
 
+        # TODO: verify & move into config module
+        LINKEDIN_SEARCH_DEFAULT_LEADS_PER_PAGE = 10
+        LINKEDIN_SEARCH_SALES_LEADS_PER_PAGE = 25
+
         if limit and limit > max_limit:
             raise ValueError(
                 f"Invalid limit: {limit}. Maximum search limit (session) is {max_limit}"
@@ -426,9 +429,9 @@ class SearchEndpoint(Endpoint):
             )
 
         request_limit = (
-            Config.LINKEDIN_SEARCH_SALES_LEADS_PER_PAGE
+            LINKEDIN_SEARCH_SALES_LEADS_PER_PAGE
             if is_sales_search
-            else Config.LINKEDIN_SEARCH_DEFAULT_LEADS_PER_PAGE
+            else LINKEDIN_SEARCH_DEFAULT_LEADS_PER_PAGE
         )
 
         if limit:
