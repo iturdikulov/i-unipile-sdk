@@ -11,6 +11,8 @@ from urllib.parse import urlparse
 from typing import Annotated
 from pydantic import StringConstraints
 
+from unipile_sdk.models import account
+
 from .errors import APIResponseError
 from .helpers import iterate_paginated_api
 from .models import (
@@ -75,7 +77,7 @@ class UsersEndpoint(Endpoint):
 
     def me(
         self,
-        account_id: Annotated[str, StringConstraints(min_length=1)],
+        account_id = None,
     ) -> LinkedinUserMe:
         """
         Retrieve informations about account owner.
@@ -86,14 +88,14 @@ class UsersEndpoint(Endpoint):
             **self.parent.request(
                 path="users/me",
                 method="GET",
-                query={"account_id": account_id},
+                account_id=account_id
             )
         )
 
     def retrieve(
         self,
-        account_id: Annotated[str, StringConstraints(min_length=1)],
         identifier: Annotated[str, StringConstraints(min_length=1)],
+        account_id = None,
         linkedin_section: LinkedinSection | None = None,
     ) -> LinkedinUserProfile:
         """
@@ -104,22 +106,19 @@ class UsersEndpoint(Endpoint):
         Endpoint documentation: https://developer.unipile.com/reference/userscontroller_getprofilebyidentifier
         """
 
-        query = {"account_id": account_id}
-
-        if linkedin_section:
-            query["linkedin_sections"] = linkedin_section.value
-
         return LinkedinUserProfile(
             **self.parent.request(
                 path=f"users/{identifier}/",  # NOTE: that slash is required, otherwise it will return 301
                 method="GET",
-                query=query,
+                query={"linkedin_sections": linkedin_section.value} if linkedin_section else {},
+                account_id=account_id
             )
         )
 
     def invite(
         self,
-        payload: LinkedinUsersInvitePayload,
+        provider_id: Annotated[str, StringConstraints(min_length=1)],
+        account_id = None,
     ) -> LinkedinUsersInviteResponse:
         """
         Send an invitation to add someone to your contacts. Ensure careful implementation of this
@@ -128,6 +127,11 @@ class UsersEndpoint(Endpoint):
 
         Endpoint documentation: https://developer.unipile.com/reference/userscontroller_adduserbyidentifier
         """
+
+        payload = LinkedinUsersInvitePayload(
+            account_id=self.parent.resolve_account_id(account_id),
+            provider_id=provider_id,
+        )
 
         return LinkedinUsersInviteResponse(
             **self.parent.request(
@@ -139,7 +143,7 @@ class UsersEndpoint(Endpoint):
 
     def relations(
         self,
-        account_id: Annotated[str, StringConstraints(min_length=1)],
+        account_id = None,
         filter: str | None = None,
         cursor: str | None = None,
         limit: int = 100,
@@ -156,11 +160,11 @@ class UsersEndpoint(Endpoint):
                 path="users/relations",
                 method="GET",
                 query={
-                    "account_id": account_id,
                     "filter": filter,
                     "cursor": cursor,
                     "limit": limit,
                 },
+                account_id=account_id,
             )
         )
 
