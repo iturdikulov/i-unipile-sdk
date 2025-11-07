@@ -403,8 +403,8 @@ class SearchEndpoint(Endpoint):
 
     def search(
         self,
-        account_id: Annotated[str, StringConstraints(min_length=1)],
         payload: LinkedinSearchPayload | LinkedinSalesNavSearchPayload | LinkedinURLSearchPayload,
+        account_id  = None,
         cursor: str | None = None,
         limit: int | None = None,
         max_limit: int = 100,
@@ -460,8 +460,9 @@ class SearchEndpoint(Endpoint):
         response = self.parent.request(
             path="linkedin/search",
             method="POST",
-            query={"cursor": cursor, "account_id": account_id, "limit": request_limit},
+            query={"cursor": cursor, "limit": request_limit},
             body=body_data,
+            account_id=account_id
         )
 
         search_response = SearchResponse(**response)
@@ -494,9 +495,9 @@ class SearchEndpoint(Endpoint):
 
     def search_param(
         self,
-        account_id: Annotated[str, StringConstraints(min_length=1)],
         type: CommonSearchParameter,
         keywords: str,
+        account_id = None,
     ) -> LinkedinSearchParametersResponse:
         """
         LinkedIn doesn't accept raw text as search parameters, but IDs. This route will help you
@@ -509,14 +510,15 @@ class SearchEndpoint(Endpoint):
             **self.parent.request(
                 path="linkedin/search/parameters",
                 method="GET",
-                query={"account_id": account_id, "type": type.value, "keywords": keywords},
+                query={"type": type.value, "keywords": keywords},
+                account_id=account_id
             )
         )
 
     def retrieve_company(
         self,
-        account_id: Annotated[str, StringConstraints(min_length=1)],
         identifier: Annotated[str, StringConstraints(min_length=1)],
+        account_id = None,
     ) -> LinkedinCompanyProfile:
         """
         Get a company profile from its name or ID.
@@ -527,14 +529,14 @@ class SearchEndpoint(Endpoint):
             **self.parent.request(
                 path=f"linkedin/company/{identifier}",
                 method="GET",
-                query={"account_id": account_id},
+                account_id=account_id
             )
         )
 
     def retrieve_company_id(
         self,
-        account_id: Annotated[str, StringConstraints(min_length=1)],
         url_or_name,
+        account_id = None
     ) -> str | None:
         url_or_name = url_or_name.strip()
         url_or_name = url_or_name.rstrip("/")
@@ -552,7 +554,7 @@ class SearchEndpoint(Endpoint):
         if company_slug:
             self.parent.logger.info("Getting company id from slug %s", company_slug)
             try:
-                company_id = self.retrieve_company(account_id, company_slug).id
+                company_id = self.retrieve_company(company_slug, account_id=account_id).id
                 return str(company_id)
             except APIResponseError as e:
                 if e.error and e.error == NotFoundType.ERRORS_RESOURCE_NOT_FOUND:
@@ -570,7 +572,7 @@ class SearchEndpoint(Endpoint):
                 url_or_name = urlparse(url_or_name).netloc
 
             search_param = self.search_param(
-                account_id, type=CommonSearchParameter.COMPANY, keywords=url_or_name
+                type=CommonSearchParameter.COMPANY, keywords=url_or_name, account_id=account_id
             )
             if not search_param.items:
                 self.parent.logger.info("Company %s not found, skip processing", url_or_name)
