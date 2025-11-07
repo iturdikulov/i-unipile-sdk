@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from typing import Annotated
+from httpx import URL
 from pydantic import StringConstraints
 
 from unipile_sdk.models import account
@@ -355,7 +356,7 @@ class HostedEndpoint(Endpoint):
     def link(
         self,
         expiries_on: datetime,
-        api_url: str,
+        api_url: URL | None = None,
         success_redirect_url: str | None = None,
         failure_redirect_url: str | None = None,
         notify_url: str | None = None,
@@ -369,10 +370,14 @@ class HostedEndpoint(Endpoint):
         Endpoint documentation: https://developer.unipile.com/reference/hostedcontroller_requestlink
         """
 
+        if not api_url:
+            api_url = str(self.parent.client.base_url)
+
         expiries_on_str = (
             f"{expiries_on.strftime('%Y-%m-%dT%H:%M:%S')}.{str(expiries_on.microsecond)[:3]}Z"
         )
 
+        # TODO: convert to pydantic model and use model_dump(exclude_unset=True)
         payload = {
             "type": type,
             "providers": providers,
@@ -383,7 +388,9 @@ class HostedEndpoint(Endpoint):
             "success_redirect_url": success_redirect_url,
             "failure_redirect_url": failure_redirect_url,
         }
+        payload = {k: v for k, v in payload.items() if v is not None}
 
+        # TODO: return pydantic model
         return self.parent.request(path="hosted/accounts/link", method="POST", body=payload)
 
     def retrieve(self):
