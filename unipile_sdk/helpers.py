@@ -117,3 +117,14 @@ def is_equation_rich_text_item_response(rich_text: Dict[Any, Any]) -> bool:
 def is_mention_rich_text_item_response(rich_text: Dict[Any, Any]) -> bool:
     """Return `True` if `rich_text` is a mention."""
     return rich_text.get("type") == "mention"
+
+def reminds_url(input: str) -> bool:
+    """
+    >>> reminds_url('yandex.ru.com/somepath')
+    True
+    """
+    if "/" not in input:
+        return False
+
+    ltext = input.lower().split("/")[0]
+    return ltext.startswith(("http", "www", "ftp"))
