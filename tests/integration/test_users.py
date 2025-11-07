@@ -1,7 +1,7 @@
 from unipile_sdk.client import Client
 
 
-def test_init(comm_client: Client):
+def test_me(comm_client: Client):
     assert comm_client.users.me() is not None
 
 
