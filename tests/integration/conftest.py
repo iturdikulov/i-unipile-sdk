@@ -31,3 +31,7 @@ def user_urn_to_invite():
     Bill Gates URN: https://www.linkedin.com/in/williamhgates
     """
     return "ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc"
+
+@pytest.fixture
+def search_keyword():
+    return "microsoft"
