@@ -8,9 +8,10 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from os import environ
 from types import TracebackType
-from typing import Any, Self
+from typing import Annotated, Any, Self
 import httpx
 from httpx import Request, Response
+from pydantic import StringConstraints
 
 from .models import APIErrorTypes
 from .errors import LinkedinLoginError
@@ -46,8 +47,9 @@ class ClientOptions:
         unipile_version: unipile version to use.
     """
 
-    auth: str = environ["UNIPILE_ACCESS_TOKEN"]
-    base_url: str = f"https://{environ['UNIPILE_BASE_URL']}"
+    auth: str
+    base_url: str
+    default_account_id: str | None = None
     timeout_ms: int = 60_000
     log_level: int = logging.INFO
     logger: logging.Logger | None = None
@@ -136,6 +138,7 @@ class BaseClient:
         method: str,
         query: dict[Any, Any] | None = None,
         body: dict[Any, Any] | None = None,
+        account_id: str | None = None,
     ) -> dict:
         # noqa
         pass
@@ -202,17 +205,26 @@ class Client(BaseClient):
         method: str,
         query: dict[Any, Any] | None = None,
         body: dict[Any, Any] | None = None,
+        **kwargs: str
     ) -> dict:
         """
         Send an HTTP request.
         """
 
-        # Filter None values from the query dictionary,
-        # since Unipile API does not support None
-        # values for specific endpoints
-        if query:
-            query = {k: v for k, v in query.items() if v is not None}
+        # If account_id passed (even None), means we need to generate query
+        # with account_id request
+        if "account_id" in kwargs:
+            if not query:
+                query = {}
 
+            # If no account_id passed try to use default one
+            if not kwargs["account_id"]:
+                query["account_id"] = self.resolve_account_id()
+
+        # Remove empty values
+        query = {k: v for k, v in query.items() if v is not None}
+
+        # Do actual request
         request = self._build_request(method, path, query, body)
 
         try:
@@ -220,11 +232,23 @@ class Client(BaseClient):
         except httpx.TimeoutException:
             raise RequestTimeoutError()
 
-        # Verify that the account is still connected
-        if response.is_error and query and query.get("account_id"):
-            self._verify_connected_account(query["account_id"])
+        # TODO: implement, Verify that the account is still connected
+        # if response.is_error and query and query.get("account_id"):
+        #     self._verify_connected_account(query["account_id"])
 
         return self._parse_response(response)
+
+    def resolve_account_id(self, account_id: str | None = None) -> str:
+        """
+        Get the account_id, using the default if not provided.
+        """
+        if not account_id:
+            if self.options.default_account_id:
+                return self.options.default_account_id
+
+            raise ValueError("account_id is required")
+
+        return account_id
 
 
 class AsyncClient(BaseClient):
