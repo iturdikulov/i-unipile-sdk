@@ -1,3 +1,4 @@
+import pytest
 from unipile_sdk.client import Client
 
 
@@ -12,6 +13,7 @@ def test_retrieve_user(comm_client: Client, user_urn_to_retrieve: str):
     )
 
 
+@pytest.mark.activities
 def test_invite_user(comm_client: Client, user_urn_to_invite: str):
     connection_info = comm_client.users.invite(provider_id=user_urn_to_invite)
     assert connection_info is not None
