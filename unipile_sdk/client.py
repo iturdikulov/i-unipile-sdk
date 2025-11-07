@@ -222,7 +222,8 @@ class Client(BaseClient):
                 query["account_id"] = self.resolve_account_id()
 
         # Remove empty values
-        query = {k: v for k, v in query.items() if v is not None}
+        if query:
+            query = {k: v for k, v in query.items() if v is not None}
 
         # Do actual request
         request = self._build_request(method, path, query, body)
