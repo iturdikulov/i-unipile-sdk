@@ -1,6 +1,8 @@
 from os import environ
 
 from unipile_sdk import Client
+from unipile_sdk.models import LinkedinSearchPayload
+from unipile_sdk.helpers import iterate_paginated_api
 from unipile_sdk.client import ClientOptions
 
 
@@ -18,6 +20,12 @@ options = ClientOptions(
 
 client = Client(options=options)
 
-# Get your user information
-me = client.users.me()
-print(f"My occupation is: {me.occupation}")
+# Search for LinkedIn profiles
+payload = LinkedinSearchPayload(
+    api="classic", category="people", keywords="Software Engineer, Programmer"
+)
+
+for person in iterate_paginated_api(
+    client.ln_search.search, payload=payload, max_total=10
+):
+    print(f"Found Person: {person.name} ({person.id})")
