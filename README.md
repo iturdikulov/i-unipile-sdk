@@ -3,291 +3,188 @@
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> Integrate our email and messaging APIs to enable your users to converse
-> directly through LinkedIn, Gmail, and WhatsApp, and trigger engagement actions
-> like follow-ups, invites, or scheduling.
+An unofficial, fully functional Python SDK for the Unipile API.
 
-Fully functional unofficial unipile SDK.
+## Why?
 
+Integrating with powerful APIs can be complex, unfortunately Unipile does not
+provide an official Python client (actual for 2025), only
+[Node.JS](https://developer.unipile.com/docs/sdk) based official client.
 
-> An unofficial, fully functional Python SDK for the Unipile API. Integrate email and messaging APIs to enable seamless conversations via LinkedIn, Gmail, WhatsApp, and more. Trigger actions like follow-ups, invites, or scheduling with ease.
+When I started working with the Unipile API and Python to automate LinkedIn
+interactions, I found myself writing a lot of boilerplate code to handle
+authentication, make HTTP requests, and parse responses. It was repetitive and
+error-prone. I wanted a simpler way to interact with the API, so I could focus
+on building features, not on the underlying HTTP calls.
 
-The SDK provides both synchronous (`Client`) and asynchronous (`AsyncClient`) interfaces for interacting with Unipile's REST API. It handles authentication, pagination, error management, and LinkedIn-specific features like profile retrieval, search, and messaging.
+That's why I built this SDK. It's a Pythonic wrapper around the Unipile API
+that handles the heavy lifting for you. Now, you can retrieve user profiles,
+search for candidates, and send messages with just a few lines of code. It's
+the tool I wish I had when I started, and I hope it makes your life easier too.
 
-Key features:
+## QuickStart
 
-- **Account Management**: Connect, list, and verify LinkedIn (and other provider) accounts.
-- **User Profiles**: Retrieve profiles, send invites, and fetch relations.
-- **Messaging**: Send messages, list chats, retrieve attendees and message history.
-- **Search**: Advanced LinkedIn searches (Classic, Sales Navigator) with filtering and pagination.
-- **Hosted Authentication**: Generate links for user account linking.
-- **Error Handling**: Custom exceptions for API responses, timeouts, and HTTP errors.
-- **Type Safety**: Built with Pydantic models for request/response validation.
+Get up and running with the Unipile Python SDK in just a few steps.
 
-For official documentation, visit [Unipile Developer Docs](https://developer.unipile.com/docs/getting-started).
+### Installation
 
-## Installation
-
-Install the SDK using [uv](https://docs.astral.sh/uv/), it's recommended for fast dependency resolution
+It is recommended to use [uv](https://github.com/astral-sh/uv), a fast, next-generation Python package installer.
 
 ```bash
-# Using uv (preferred)
-uv add FUTURE_PROJECT_NAME
-
-# Alternative installation method, using pip
-pip install FUTURE_PROJECT_NAME
+# Using uv (recommended)
+uv pip install i-unipile-sdk
 ```
 
-Set environment variables for authentication:
+Alternatively, you can use `pip`:
+
+```bash
+pip install i-unipile-sdk
+```
+
+### Configuration
+
+#### 1. Getting required credentials
+
+You need to generate your API token (`auth`), get DNS (`base_url`), connect
+account and get it's id (`default_account_id`).
+
+All related information can be found in the
+[getting-started](https://developer.unipile.com/docs/getting-started)
+documentation. I recommended to watch a quick start video first.
+
+#### 2. Initialize client
+
+You can configure the client by passing an `ClientOptions` object directly:
+
+```python
+from unipile_sdk import Client
+from unipile_sdk.client import ClientOptions
+
+options = ClientOptions(
+    auth="your_api_key_here", # Your Unipile API Key
+    base_url="https://api.unipile.com", # The Unipile API base URL
+    default_account_id="your_account_id_here", # The ID of the account to use
+)
+
+client = Client(options=options)
+```
+
+Alternatively for convenience, especially in development and testing, you can
+also configure the client using environment variables. The client will
+automatically pick them up if no direct configuration is provided.
 
 ```bash
 export UNIPILE_BASE_URL="api.unipile.com"
 export UNIPILE_ACCESS_TOKEN="your_api_key_here"
+export UNIPILE_ACCOUNT="your_account_id_here"
+
+client = Client()
 ```
 
 ## Usage
 
-### Basic Setup
+This section showcases some of the more advanced features of the SDK.
 
-Import the client and create an instance. The SDK defaults to the production Unipile API.
+### Advanced LinkedIn Search
 
-```python
-from unipile_sdk import Client
-
-# Synchronous client
-client = Client()
-# Or with custom options
-client = Client(auth="your_token", base_url="https://api.unipile.com", timeout_ms=30000)
-```
-
-For async usage:
+Perform a detailed search for people on LinkedIn. The SDK will handle pagination for you.
 
 ```python
-import asyncio
-from unipile_sdk import AsyncClient
-
-async def main():
-    async with AsyncClient() as client:
-        # Your async code here
-
-asyncio.run(main())
-```
-
-### Account Connection (LinkedIn Example)
-
-Connect a LinkedIn account using cookies/tokens:
-
-```python
-from unipile_sdk import Client
-from unipile_sdk.models import LinkedinAccountsConnect
-
-client = Client()
-
-payload = LinkedinAccountsConnect(
-    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-    access_token="your_li_at_token",
-    premium_token="your_li_a_token",  # Optional for Premium features
-    country="US"
-)
-
-response = client.accounts.connect(payload)
-print(f"Account ID: {response.account_id}")
-```
-
-List connected accounts:
-
-```python
-accounts = client.accounts.accounts(limit=50)
-for account in accounts.items:
-    print(f"Account: {account.name} (ID: {account.id})")
-```
-
-### User Profile Retrieval
-
-Fetch a user's profile by identifier (e.g., public profile URL or ID):
-
-```python
-profile = client.users.retrieve(
-    account_id="your_account_id",
-    identifier="john-doe-123",
-    linkedin_section="experience"  # Optional: Filter sections
-)
-print(f"Headline: {profile.headline}")
-print(f"Experience: {profile.work_experience}")
-```
-
-Send a connection invite:
-
-```python
-from unipile_sdk.models import LinkedinUsersInvitePayload
-
-payload = LinkedinUsersInvitePayload(
-    provider_id="target_user_provider_id",
-    account_id="your_account_id",
-    message="Let's connect!",
-    user_email="target@example.com"  # Optional for LinkedIn
-)
-
-response = client.users.invite(payload)
-print(f"Invitation ID: {response.invitation_id}")
-```
-
-### Messaging
-
-List chats for an attendee:
-
-```python
-chats = client.messages.list_chats_by_attendee(
-    attendee_id="attendee_id",
-    account_id="your_account_id",
-    limit=20
-)
-for chat in chats.items:
-    print(f"Chat: {chat.name} (Unread: {chat.unread_count})")
-```
-
-Send a message:
-
-```python
-response = client.messages.send_message(
-    chat_id="chat_id",
-    account_id="your_account_id",
-    text="Hello from Unipile SDK!"
-)
-print(f"Message ID: {response.message_id}")
-```
-
-Start a new chat with attendees:
-
-```python
-response = client.messages.send_message_to_attendees(
-    attendees_ids=["attendee_id1", "attendee_id2"],
-    account_id="your_account_id",
-    text="Starting a new conversation!"
-)
-print(f"Chat ID: {response.chat_id}, Message ID: {response.message_id}")
-```
-
-### LinkedIn Search
-
-Search for people using Classic API:
-
-```python
-from unipile_sdk.models import LinkedinSearchPayload, NetworkDistanceEnum
+from unipile_sdk.models import LinkedinSearchPayload
+from unipile_sdk.helpers import iterate_paginated_api
 
 payload = LinkedinSearchPayload(
-    keywords="Software Engineer",
-    location=["102713980"],  # Location ID (use search_param to get IDs)
-    network_distance=[NetworkDistanceEnum.FIRST, NetworkDistanceEnum.SECOND],
-    limit=25
+    api="classic",
+    category="people",
+    keywords="Software Engineer in Test"
 )
 
-results = client.ln_search.search(
-    account_id="your_account_id",
-    payload=payload,
-    limit=10  # Global limit after filtering
-)
-for person in results.items:
-    print(f"Name: {person.name}, Headline: {person.headline}, Distance: {person.network_distance}")
+for person in iterate_paginated_api(client.search.search, payload=payload, max_total=50):
+    print(f"Found Person: {person.name} ({person.id})")
 ```
 
-Get search parameters (e.g., location IDs):
+### Send a LinkedIn Message
+
+Send a message to a LinkedIn user. You'll need the user's URN.
 
 ```python
-params = client.ln_search.search_param(
-    account_id="your_account_id",
-    type="LOCATION",
-    keywords="New York"
-)
-for param in params.items:
-    print(f"Location: {param.title} (ID: {param.id})")
-```
+# Note: This is a simplified example. You'll need a valid chat_id.
+# You can get a chat_id by listing chats for an attendee.
+try:
+    chat_id = "some_chat_id"
+    client.messages.send_message(
+        chat_id=chat_id,
+        text="Hello from the Unipile SDK!"
+    )
+    print("Message sent successfully!")
+except Exception as e:
+    print(f"Failed to send message: {e}")
 
-For Sales Navigator:
-
-```python
-from unipile_sdk.models import LinkedinSalesNavSearchPayload
-
-payload = LinkedinSalesNavSearchPayload(
-    keywords="Marketing Manager",
-    location={"include": ["102713980"]},
-    industry={"include": ["industry_id"]},
-    network_distance=[1, 2]
-)
-
-results = client.ln_search.search(account_id="your_account_id", payload=payload)
-```
-
-### Hosted Account Linking
-
-Generate a hosted auth link:
-
-```python
-from datetime import datetime, timedelta
-from unipile_sdk.models import AccountLinkType, AccountProvider
-
-link_data = client.hosted.link(
-    expiries_on=datetime.utcnow() + timedelta(hours=1),
-    api_url="https://yourapp.com/api/callback",
-    success_redirect_url="https://yourapp.com/success",
-    providers=[AccountProvider.LINKEDIN],
-    type=AccountLinkType.create
-)
-print(f"Hosted Link: {link_data['url']}")
 ```
 
 ### Error Handling
 
-The SDK raises custom exceptions:
+The SDK raises custom exceptions for different types of errors.
 
 ```python
-from unipile_sdk.errors import APIResponseError, RequestTimeoutError
+from unipile_sdk.errors import APIResponseError
+from unipile_sdk.models import NotFoundType
 
 try:
-    # API call
-    pass
+    client.search.retrieve_company(identifier="a-company-that-does-not-exist")
 except APIResponseError as e:
-    print(f"API Error: {e.error} - {e.detail}")
-except RequestTimeoutError:
-    print("Request timed out")
-except Exception as e:
-    print(f"Unexpected: {e}")
+    if e.error == NotFoundType.ERRORS_RESOURCE_NOT_FOUND:
+        print("Caught a 'Not Found' error, as expected.")
+    else:
+        raise e
 ```
 
-## Project Structure
+## Drawbacks
 
-- **`__init__.py`**: Package entry point; exports main classes (`Client`, `AsyncClient`, `APIResponseError`).
-- **`api_endpoints.py`**: Defines endpoint classes (e.g., `UsersEndpoint`, `MessagesEndpoint`, `SearchEndpoint`) for API interactions.
-- **`client.py`**: Core `BaseClient`, `Client` (sync), and `AsyncClient` (async) implementations; handles HTTP requests with httpx.
-- **`errors.py`**: Custom exceptions (`APIResponseError`, `HTTPResponseError`, `RequestTimeoutError`).
-- **`helpers.py`**: Utilities for pagination (`iterate_paginated_api`), URL parsing, and response validation.
-- **`logging.py`**: Configures console logging for the SDK.
-- **`models.py`**: Pydantic models for requests/responses (e.g., `LinkedinUserProfile`, `SearchResponse`, error types).
-- **`typing.py`**: Custom types (e.g., `SyncAsync`, `AccountProvider`).
-- **`README.md`**: This documentation.
+This SDK is currently under development and should be considered a work in
+progress. Here are a few things to keep in mind:
 
-## Dependencies
+- **Incomplete API Coverage:** The SDK does not cover the entire Unipile API.
+  The primary focus has been on the LinkedIn-related endpoints.
+- **Potential for Bugs:** As with any active development project, there may be
+  bugs or incomplete features.
 
-The SDK relies on:
-- `httpx` (>=0.27.0): For HTTP requests (sync/async).
-- `pydantic` (>=2.5.0): For data validation and models.
-- `typing-extensions`: For type hints.
-- Standard library: `datetime`, `json`, `logging`, `urllib.parse`, `uuid`.
-
-No additional runtime dependencies beyond these. Install via the package manager as shown in Installation.
+Contributions to improve the SDK and expand its coverage are welcome.
 
 ## Contributing
 
-Contributions are welcome! To get started:
+Contributions are welcome! Here's how you can get started with the development of the SDK.
 
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature/amazing-feature`).
-3. Commit changes (`git commit -m 'Add amazing feature'`).
-4. Push to the branch (`git push origin feature/amazing-feature`).
-5. Open a Pull Request.
+### Development Setup
 
-Please ensure code adheres to PEP 8, add tests for new features, and update documentation. For major changes, open an issue first to discuss.
+1.  Clone the repository.
+2.  Install the development dependencies:
 
-## License
+    ```bash
+    git clone repo-url
+    cd repo-directory
+    uv pip install -e ".[dev]" # or `pip install -e ".[dev]"`
+    ```
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### Running Tests
+
+To run the tests, you need to set up your test environment variables. Create a `.tests.env` file in the root of the project:
+
+```
+UNIPILE_BASE_URL=api.unipile.com
+UNIPILE_ACCESS_TOKEN=your_api_key_here
+UNIPILE_ACCOUNT=your_default_account_id_here
+UNIPILE_TEST_LN_ATTENDEE=an_attendee_id
+```
+
+Then, run the tests using `pytest`:
+
+```bash
+pytest
+```
+
+Some tests that perform actions like sending messages are marked as `messaging` and are skipped by default. To run them, use the `--messaging` flag:
+
+```bash
+pytest --messaging
+```
