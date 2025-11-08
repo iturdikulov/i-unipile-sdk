@@ -17,10 +17,10 @@ authentication, make HTTP requests, and parse responses. It was repetitive and
 error-prone. I wanted a simpler way to interact with the API, so I could focus
 on building features, not on the underlying HTTP calls.
 
-That's why I built this SDK. It's a Pythonic wrapper around the Unipile API
-that handles the heavy lifting for you. Now, you can retrieve user profiles,
-search for candidates, and send messages with just a few lines of code. It's
-the tool I wish I had when I started, and I hope it makes your life easier too.
+That's why I built this SDK. It's a Pythonic wrapper around the Unipile API that
+handles the heavy lifting for you. Now, you can retrieve user profiles, search
+for candidates, and send messages with just a few lines of code. It's the tool I
+wish I had when I started, and I hope it makes your life easier too.
 
 ## QuickStart
 
@@ -28,25 +28,29 @@ Get up and running with the Unipile Python SDK in just a few steps.
 
 ### Installation
 
-It is recommended to use [uv](https://github.com/astral-sh/uv), a fast, next-generation Python package installer.
-
 ```bash
-# Using uv (recommended)
-uv pip install i-unipile-sdk
+pip install i-unipile-sdk  # or add it into requirements and install it
 ```
 
-Alternatively, you can use `pip`:
+Alternatively, you can use [uv](https://docs.astral.sh/uv/guides/projects/) and
+add unipile SDK into your existing project.
 
 ```bash
-pip install i-unipile-sdk
+uv add i-unipile-sdk
 ```
 
 ### Configuration
 
 #### 1. Getting required credentials
 
-You need to generate your API token (`auth`), get DNS (`base_url`), connect
-account and get it's id (`default_account_id`).
+You need to get some data before processing:
+
+- Get DNS (`base_url`), can be copied from
+  [dashboard](https://dashboard.unipile.com/).
+- Generate your API token (`auth`) in
+  [access tokens](https://dashboard.unipile.com/access-tokens)
+- Connect account and get it's id (`default_account_id`), can be copied next to
+account name in the [accounts](https://dashboard.unipile.com/accounts) section.
 
 All related information can be found in the
 [getting-started](https://developer.unipile.com/docs/getting-started)
@@ -61,24 +65,15 @@ from unipile_sdk import Client
 from unipile_sdk.client import ClientOptions
 
 options = ClientOptions(
-    auth="your_api_key_here", # Your Unipile API Key
-    base_url="https://api.unipile.com", # The Unipile API base URL
-    default_account_id="your_account_id_here", # The ID of the account to use
+    auth="your_api_key_here",  # Your Unipile API Key
+    base_url="https://your_base_url_here",  # The Unipile API base URL
+    default_account_id="your_account_id_here",  # The ID of the account to use
 )
 
 client = Client(options=options)
-```
 
-Alternatively for convenience, especially in development and testing, you can
-also configure the client using environment variables. The client will
-automatically pick them up if no direct configuration is provided.
-
-```bash
-export UNIPILE_BASE_URL="api.unipile.com"
-export UNIPILE_ACCESS_TOKEN="your_api_key_here"
-export UNIPILE_ACCOUNT="your_account_id_here"
-
-client = Client()
+me = client.users.me()
+print(f"Hello, {me.name}!")
 ```
 
 ## Usage
@@ -87,39 +82,21 @@ This section showcases some of the more advanced features of the SDK.
 
 ### Advanced LinkedIn Search
 
-Perform a detailed search for people on LinkedIn. The SDK will handle pagination for you.
+Perform a detailed search for people on LinkedIn. The SDK will handle pagination
+for you.
 
 ```python
 from unipile_sdk.models import LinkedinSearchPayload
 from unipile_sdk.helpers import iterate_paginated_api
 
 payload = LinkedinSearchPayload(
-    api="classic",
-    category="people",
-    keywords="Software Engineer in Test"
+    api="classic", category="people", keywords="Software Engineer, Programmer"
 )
 
-for person in iterate_paginated_api(client.search.search, payload=payload, max_total=50):
+for person in iterate_paginated_api(
+    client.search.search, payload=payload, max_total=50
+):
     print(f"Found Person: {person.name} ({person.id})")
-```
-
-### Send a LinkedIn Message
-
-Send a message to a LinkedIn user. You'll need the user's URN.
-
-```python
-# Note: This is a simplified example. You'll need a valid chat_id.
-# You can get a chat_id by listing chats for an attendee.
-try:
-    chat_id = "some_chat_id"
-    client.messages.send_message(
-        chat_id=chat_id,
-        text="Hello from the Unipile SDK!"
-    )
-    print("Message sent successfully!")
-except Exception as e:
-    print(f"Failed to send message: {e}")
-
 ```
 
 ### Error Handling
@@ -153,22 +130,24 @@ Contributions to improve the SDK and expand its coverage are welcome.
 
 ## Contributing
 
-Contributions are welcome! Here's how you can get started with the development of the SDK.
+Contributions are welcome! Here's how you can get started with the development
+of the SDK.
 
 ### Development Setup
 
-1.  Clone the repository.
-2.  Install the development dependencies:
+1. Clone the repository.
+2. Install the development dependencies:
 
-    ```bash
-    git clone repo-url
-    cd repo-directory
-    uv pip install -e ".[dev]" # or `pip install -e ".[dev]"`
-    ```
+   ```bash
+   git clone repo-url
+   cd repo-directory
+   uv pip install -e ".[dev]" # or `pip install -e ".[dev]"`
+   ```
 
 ### Running Tests
 
-To run the tests, you need to set up your test environment variables. Create a `.tests.env` file in the root of the project:
+To run the tests, you need to set up your test environment variables. Create a
+`.tests.env` file in the root of the project:
 
 ```
 UNIPILE_BASE_URL=api.unipile.com
@@ -183,7 +162,8 @@ Then, run the tests using `pytest`:
 pytest
 ```
 
-Some tests that perform actions like sending messages are marked as `messaging` and are skipped by default. To run them, use the `--messaging` flag:
+Some tests that perform actions like sending messages are marked as `messaging`
+and are skipped by default. To run them, use the `--messaging` flag:
 
 ```bash
 pytest --messaging
