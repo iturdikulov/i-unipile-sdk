@@ -6,16 +6,16 @@ def test_me(comm_client: Client):
     assert comm_client.users.me() is not None
 
 
-def test_retrieve_user(comm_client: Client, user_urn_to_retrieve: str):
-    user_info = comm_client.users.retrieve(identifier=user_urn_to_retrieve)
+def test_retrieve_user(comm_client: Client, ln_default_user_urn: str):
+    user_info = comm_client.users.retrieve(identifier=ln_default_user_urn)
     assert user_info.connections_count and user_info.connections_count > 0, (
-        f"Expected connections_count for {user_urn_to_retrieve} URN to be greater than 0, but got {user_info.connections_count or 0}"
+        f"Expected connections_count for {ln_default_user_urn} URN to be greater than 0, but got {user_info.connections_count or 0}"
     )
 
 
 @pytest.mark.activities
-def test_invite_user(comm_client: Client, user_urn_to_invite: str):
-    connection_info = comm_client.users.invite(provider_id=user_urn_to_invite)
+def test_invite_user(comm_client: Client, ln_invite_user_urn: str):
+    connection_info = comm_client.users.invite(provider_id=ln_invite_user_urn)
     assert connection_info is not None
 
 
