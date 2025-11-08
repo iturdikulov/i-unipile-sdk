@@ -11,7 +11,7 @@ logger = getLogger(__name__)
 
 @pytest.fixture(scope="session", autouse=True)
 def load_env() -> None:
-    env_file = find_dotenv(".env.tests")
+    env_file = find_dotenv(".tests.env")
     load_dotenv(env_file)
 
 
