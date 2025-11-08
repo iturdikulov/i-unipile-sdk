@@ -1,10 +1,18 @@
-from os import environ
+from os import environ, getenv
+from random import choice
 import pytest
+from dotenv import find_dotenv, load_dotenv
 from logging import getLogger
 from unipile_sdk import Client
 from unipile_sdk.client import ClientOptions
 
 logger = getLogger(__name__)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def load_env() -> None:
+    env_file = find_dotenv(".env.tests")
+    load_dotenv(env_file)
 
 
 def pytest_addoption(parser):
@@ -48,21 +56,44 @@ def comm_client():
 
 
 @pytest.fixture
-def user_urn_to_retrieve():
+def ln_default_user_urn():
     """
-    Bill Gates URN: https://www.linkedin.com/in/williamhgates
+    Default LinkedIn urn to get some data
     """
-    return "ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc"
+    return environ["UNIPILE_LN_DEFAULT_USER_URN"]
 
 
 @pytest.fixture
 def user_urn_to_invite():
     """
-    Bill Gates URN: https://www.linkedin.com/in/williamhgates
+    URN for a user to invite on LinkedIn
     """
-    return "ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc"
+    return environ["UNIPILE_LN_DEFAULT_USER_URN"]
+
+
+@pytest.fixture
+def user_urn_to_message():
+    """
+    URN for a user to send messages to
+    """
+    return getenv("UNIPILE_LN_USER_URN_TO_MESSAGE")
 
 
 @pytest.fixture
 def search_keyword():
     return "microsoft"
+
+
+@pytest.fixture
+def ln_sending_message():
+    """
+    Default LinkedIn default sending message
+    """
+    return choice(
+        (
+            "Thank you for the connection.",
+            "Thank you for connecting with me.",
+            "Thank you for connecting!",
+            "Thank you for your connection request.",
+        )
+    )

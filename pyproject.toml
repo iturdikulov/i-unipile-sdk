@@ -7,6 +7,7 @@ requires-python = ">=3.10"
 dependencies = [
     "httpx>=0.28.1",
     "pydantic>=2.10.6",
+    "python-dotenv>=1.2.1",
 ]
 
 [dependency-groups]
@@ -30,6 +31,9 @@ testpaths = [
 ]
 log_cli = true
 log_cli_level = "INFO"
+markers = [
+    "messaging: marks tests as messaging tests",
+]
 
 [tool.basedpyright]
 typeCheckingMode = "basic"
