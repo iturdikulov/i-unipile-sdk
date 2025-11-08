@@ -73,48 +73,62 @@ options = ClientOptions(
 client = Client(options=options)
 
 me = client.users.me()
-print(f"Hello, {me.name}!")
+print(f"My occupation is: {me.occupation}")
 ```
 
-## Usage
+## Usage Examples
 
-This section showcases some of the more advanced features of the SDK.
+This section showcases some of the more advanced features of the SDK. For
+brevity, it is assumed that the `client` object has been initialized as shown
+in the [QuickStart](#quickstart) section.
 
-### Advanced LinkedIn Search
+To use examples, you need to import the relevant models and functions from the
+SDK, e.g., `LinkedinSearchPayload`, `iterate_paginated_api`, and `Client`:
+
+```python
+from unipile_sdk.models import LinkedinSearchPayload, NotFoundType
+from unipile_sdk.helpers import iterate_paginated_api
+from unipile_sdk.errors import APIResponseError
+```
+
+### List Accounts
+
+Retrieve a list of all connected accounts.
+
+```python
+accounts = client.accounts.accounts(limit=100)
+for account in accounts.items:
+    print(f"Account: {account.type} - {account.name}")
+```
+
+### LinkedIn Search
 
 Perform a detailed search for people on LinkedIn. The SDK will handle pagination
 for you.
 
 ```python
-from unipile_sdk.models import LinkedinSearchPayload
-from unipile_sdk.helpers import iterate_paginated_api
-
 payload = LinkedinSearchPayload(
     api="classic", category="people", keywords="Software Engineer, Programmer"
 )
 
 for person in iterate_paginated_api(
-    client.search.search, payload=payload, max_total=50
+    client.ln_search.search, payload=payload, max_total=10
 ):
     print(f"Found Person: {person.name} ({person.id})")
 ```
 
-### Error Handling
+### Retrieve Company by Name
 
-The SDK raises custom exceptions for different types of errors.
+Fetch company details using its name.
 
 ```python
-from unipile_sdk.errors import APIResponseError
-from unipile_sdk.models import NotFoundType
-
-try:
-    client.search.retrieve_company(identifier="a-company-that-does-not-exist")
-except APIResponseError as e:
-    if e.error == NotFoundType.ERRORS_RESOURCE_NOT_FOUND:
-        print("Caught a 'Not Found' error, as expected.")
-    else:
-        raise e
+company = client.ln_search.retrieve_company(identifier="LinkedIn")
+print(f"Company: {company.name} ({company.id})")
 ```
+
+> For more examples, please check the `tests/integration` directory. The
+> following examples are also available as Python files in the `examples`
+> directory.
 
 ## Drawbacks
 
@@ -149,11 +163,16 @@ of the SDK.
 To run the tests, you need to set up your test environment variables. Create a
 `.tests.env` file in the root of the project:
 
+`UNIPILE_BASE_URL` should be without protocol (like api.unipile.com...).
+
+
 ```
-UNIPILE_BASE_URL=api.unipile.com
-UNIPILE_ACCESS_TOKEN=your_api_key_here
-UNIPILE_ACCOUNT=your_default_account_id_here
-UNIPILE_TEST_LN_ATTENDEE=an_attendee_id
+UNIPILE_ACCESS_TOKEN=your_api_token_here
+UNIPILE_BASE_URL=your_unipile_api_basi_url
+UNIPILE_ACCOUNT=your__account_id_here
+
+UNIPILE_LN_DEFAULT_USER_URN=your_default_user_urn_here
+UNIPILE_LN_USER_URN_TO_MESSAGE=your_target_user_urn_here
 ```
 
 Then, run the tests using `pytest`:
@@ -162,8 +181,20 @@ Then, run the tests using `pytest`:
 pytest
 ```
 
+#### Activities tests
+
 Some tests that perform actions like sending messages are marked as `messaging`
-and are skipped by default. To run them, use the `--messaging` flag:
+and are skipped by default. To run them, use the `--activities` flag:
+
+If you specify `UNIPILE_LN_USER_URN_TO_MESSAGE`, you can test messaging
+functionality by sending a message to that user URN. Be careful this can
+actually send a many same messages on LinkedIn. Use a test account or a
+controlled recipient.
+
+There additional `test_send_message_to_attendees` test, which sends messages
+with specific logic. If there found only one message (usually invite message),
+it sends a test message to that attendee and asserts success. So expect some
+"thank you for connection" messages if `--activities` flag is used.
 
 ```bash
 pytest --messaging
