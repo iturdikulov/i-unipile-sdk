@@ -319,12 +319,13 @@ class AccountsEndpoint(Endpoint):
             )
         )
 
+    # TODO: add test
     def delete(
         self,
-        account_id: Annotated[str, StringConstraints(min_length=1)],
+        account_id = None
     ):
         return self.parent.request(
-            path=f"accounts/{account_id}",
+            path=f"accounts/{self.parent.resolve_account_id(account_id)}",
             method="DELETE",
         )
 
