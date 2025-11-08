@@ -176,9 +176,9 @@ class MessagesEndpoint(Endpoint):
 
     def chat_attendees(
         self,
-        account_id: Annotated[str, StringConstraints(min_length=1)],
         cursor: str | None = None,
         limit: int = 100,
+        account_id = None
     ):
         """
         Returns a list of messaging attendees. Some optional parameters are available to filter the
@@ -191,10 +191,10 @@ class MessagesEndpoint(Endpoint):
                 path="chat_attendees",
                 method="GET",
                 query={
-                    "account_id": account_id,
                     "cursor": cursor,
                     "limit": limit,
                 },
+                account_id = account_id,
             )
         )
 
@@ -202,7 +202,7 @@ class MessagesEndpoint(Endpoint):
     def list_chats_by_attendee(
         self,
         attendee_id: str,
-        account_id: Annotated[str, StringConstraints(min_length=1)],
+        account_id = None,
         cursor: str | None = None,
         limit: int = 100,
     ):
@@ -216,10 +216,10 @@ class MessagesEndpoint(Endpoint):
                 path=f"chat_attendees/{attendee_id}/chats",
                 method="GET",
                 query={
-                    "account_id": account_id,
                     "cursor": cursor,
                     "limit": limit,
                 },
+                account_id = account_id,
             )
         )
 
@@ -250,8 +250,8 @@ class MessagesEndpoint(Endpoint):
     def send_message(
         self,
         chat_id: Annotated[str, StringConstraints(min_length=1)],
-        account_id: Annotated[str, StringConstraints(min_length=1)],
         text: str | None = None,  # WARN: need to add restrictions here!
+        account_id = None,
     ) -> ChatsSendMessageResponse:
         """
         Send a message to the given chat with the possibility to link some attachments.
@@ -267,16 +267,16 @@ class MessagesEndpoint(Endpoint):
                 path=f"chats/{chat_id}/messages",
                 method="POST",
                 body={
-                    "account_id": account_id,
                     "text": text,
                 },
+                account_id = account_id,
             )
         )
 
     def send_message_to_attendees(
         self,
         attendees_ids: list[Annotated[str, StringConstraints(min_length=1)]],
-        account_id: Annotated[str, StringConstraints(min_length=1)],
+        account_id = None,
         text: str | None = None,
     ) -> ChatsStartedResponse:
         """
@@ -287,14 +287,15 @@ class MessagesEndpoint(Endpoint):
         Endpoint documentation: https://developer.unipile.com/reference/chatscontroller_startnewchat
         """
 
+        # TODO: add pydantic model
         return ChatsStartedResponse(
             **self.parent.request(
                 path="chats",
                 method="POST",
                 body={
-                    "account_id": account_id,
                     "attendees_ids": attendees_ids,
                     "text": text,
+                    "account_id": self.parent.resolve_account_id(account_id),
                 },
             )
         )
