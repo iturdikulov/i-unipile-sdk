@@ -23,7 +23,7 @@ handles the heavy lifting for you. Now, you can retrieve user profiles, search
 for candidates, and send messages with just a few lines of code. It's the tool I
 wish I had when I started, and I hope it makes your life easier too.
 
-## QuickStart
+## Quick Start
 
 Get up and running with the Unipile Python SDK in just a few steps.
 
@@ -38,7 +38,7 @@ pip install i-unipile-sdk  # or add it into requirements and install it
 ```
 
 Alternatively, you can use [uv](https://docs.astral.sh/uv/guides/projects/) and
-add unipile SDK into your existing project.
+add Unipile SDK into your existing project.
 
 ```bash
 uv add i-unipile-sdk
@@ -54,12 +54,12 @@ You need to get some data before processing:
   [dashboard](https://dashboard.unipile.com/).
 - Generate your API token (`auth`) in
   [access tokens](https://dashboard.unipile.com/access-tokens)
-- Connect account and get it's id (`default_account_id`), can be copied next to
+- Connect account and get its id (`default_account_id`), can be copied next to
 account name in the [accounts](https://dashboard.unipile.com/accounts) section.
 
 All related information can be found in the
 [getting-started](https://developer.unipile.com/docs/getting-started)
-documentation. I recommended to watch a quick start video first.
+documentation. I recommended watching there a quick start video first.
 
 #### 2. Initialize client
 
@@ -85,7 +85,7 @@ print(f"My occupation is: {me.occupation}")
 
 This section showcases some of the more advanced features of the SDK. For
 brevity, it is assumed that the `client` object has been initialized as shown
-in the [QuickStart](#quickstart) section.
+in the [Quick Start](#quickstart) section.
 
 To use examples, you need to import the relevant models and functions from the
 SDK, e.g., `LinkedinSearchPayload`, `iterate_paginated_api`, and `Client`:
