@@ -26,6 +26,10 @@ wish I had when I started, and I hope it makes your life easier too.
 
 Get up and running with the Unipile Python SDK in just a few steps.
 
+Demonstration of the work:
+
+https://github.com/user-attachments/assets/4c15716a-d314-429e-9fe4-c6cf654073fd
+
 ### Installation
 
 ```bash
